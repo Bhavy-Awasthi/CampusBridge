@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Profile — CampusBridge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0e1a;--surface:rgba(12,17,30,0.8);--border:rgba(245,158,11,0.12);--text:#f1f5f9;--muted:#a1a1aa;--dim:#57534e}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:rgba(245,158,11,0.3);border-radius:3px}
+    .blob{position:fixed;pointer-events:none;z-index:0}
+    .blob-1{width:600px;height:600px;background:radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);top:-150px;left:-150px}
+    .page-wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:1.5rem}
+
+    /* Profile Header */
+    .profile-header{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:2rem;margin-bottom:1.5rem;position:relative;overflow:hidden}
+    .profile-header::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,#f59e0b,#14b8a6,transparent)}
+    .profile-top{display:flex;align-items:flex-start;gap:1.5rem;flex-wrap:wrap}
+    .profile-avatar-wrap{position:relative;flex-shrink:0}
+    .profile-avatar{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid rgba(245,158,11,0.35);box-shadow:0 0 30px rgba(245,158,11,0.3)}
+    .avatar-upload-btn{position:absolute;bottom:0;right:0;width:28px;height:28px;border-radius:50%;background:#f59e0b;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.75rem;color:#fff;transition:background 0.2s}
+    .avatar-upload-btn:hover{background:#d97706}
+    #avatar-file-input{display:none}
+    .profile-info{flex:1}
+    .profile-name{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:800;color:#fff;margin-bottom:0.3rem}
+    .profile-email{font-size:0.83rem;color:var(--muted);margin-bottom:0.5rem}
+    .profile-bio{font-size:0.88rem;color:var(--muted);line-height:1.6;margin:0.5rem 0}
+    .profile-meta{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.75rem}
+    .profile-meta-chip{display:inline-flex;align-items:center;gap:0.35rem;padding:0.25rem 0.75rem;background:rgba(15,20,35,0.8);border:1px solid rgba(245,158,11,0.1);border-radius:999px;font-size:0.75rem;color:var(--muted)}
+    .profile-actions{display:flex;gap:0.75rem;margin-top:1rem;flex-wrap:wrap}
+
+    /* Stats */
+    .profile-stats{display:flex;gap:2rem;margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(245,158,11,0.08)}
+    .stat-item{text-align:center}
+    .stat-num{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:800;background:linear-gradient(90deg,#fbbf24,#14b8a6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .stat-label{font-size:0.72rem;color:var(--dim)}
+
+    /* Skills */
+    .skills-list{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem}
+    .skill-chip{padding:0.25rem 0.8rem;background:radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);border:1px solid rgba(245,158,11,0.15);border-radius:999px;font-size:0.75rem;color:#fbbf24}
+
+    /* Badges */
+    .badge-list{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem}
+    .badge-chip{padding:0.2rem 0.7rem;background:radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%);border:1px solid rgba(245,158,11,0.2);border-radius:999px;font-size:0.75rem;color:#fbbf24}
+
+    /* Edit Modal */
+    .edit-section{margin-bottom:1rem}
+
+    /* Posts */
+    .posts-grid{display:flex;flex-direction:column;gap:1rem}
+    .section-title{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;color:#fff;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem}
+    .section-title::before{content:'';display:block;width:3px;height:16px;background:linear-gradient(135deg,#f59e0b,#14b8a6);border-radius:2px}
+  </style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<script src="js/auth.js"></script>
+<script>renderNav('');</script>
+
+<div class="page-wrap" id="page-content" style="display:none">
+
+  <!-- Profile Header -->
+  <div class="profile-header">
+    <div class="profile-top">
+      <div class="profile-avatar-wrap">
+        <img id="profile-avatar" src="" class="profile-avatar" alt="avatar" style="cursor:pointer" onclick="openImageModal(this.src)"/>
+        <label class="avatar-upload-btn" id="avatar-upload-label" style="display:none" title="Change photo">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <input type="file" id="avatar-file-input" accept="image/*"/>
+        </label>
+      </div>
+      <div class="profile-info">
+        <div class="profile-name" id="profile-name"></div>
+        <div id="profile-role-badge"></div>
+        <div class="profile-email" id="profile-email"></div>
+        <div class="profile-bio" id="profile-bio"></div>
+        <div class="profile-meta" id="profile-meta"></div>
+        <div id="profile-skills-wrap" style="margin-top:0.75rem;display:none">
+          <div style="font-size:0.72rem;color:var(--dim);margin-bottom:0.35rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Skills / Subjects</div>
+          <div class="skills-list" id="profile-skills"></div>
+        </div>
+        <div class="profile-actions" id="profile-actions"></div>
+      </div>
+    </div>
+    <div class="profile-stats">
+      <div class="stat-item"><div class="stat-num" id="stat-posts">0</div><div class="stat-label">Posts</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-badges">0</div><div class="stat-label">Badges</div></div>
+    </div>
+    <div id="badges-wrap" style="margin-top:1rem;display:none">
+      <div style="font-size:0.72rem;color:var(--dim);margin-bottom:0.35rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Badges</div>
+      <div class="badge-list" id="badges-list"></div>
+    </div>
+  </div>
+
+  <!-- Posts -->
+  <div class="section-title">Posts</div>
+  <div class="posts-grid" id="posts-grid">
+    <div style="text-align:center;padding:2rem"><span class="spinner"></span></div>
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal-overlay" id="edit-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Edit Profile</span>
+      <button class="modal-close" onclick="document.getElementById('edit-modal').style.display='none'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="cb-form-group"><label class="cb-label">Bio</label><textarea id="edit-bio" class="cb-input cb-textarea" placeholder="Tell us about yourself..."></textarea></div>
+    <div class="cb-form-group"><label class="cb-label">Department</label><input id="edit-dept" class="cb-input" placeholder="e.g. Computer Science"/></div>
+    <div class="cb-form-group" id="edit-skills-group"><label class="cb-label">Skills / Subjects (comma-separated)</label><input id="edit-skills" class="cb-input" placeholder="Python, Machine Learning, Web Dev"/></div>
+    <div class="cb-form-group" id="edit-batch-group" style="display:none"><label class="cb-label">Batch Year</label><input id="edit-batch" class="cb-input" placeholder="e.g. 2021"/></div>
+    <div class="cb-form-group" id="edit-company-group" style="display:none"><label class="cb-label">Company</label><input id="edit-company" class="cb-input" placeholder="e.g. Google"/></div>
+    <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1rem">
+      <button class="cb-btn cb-btn-secondary" onclick="document.getElementById('edit-modal').style.display='none'">Cancel</button>
+      <button class="cb-btn cb-btn-primary" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Image View Modal -->
+<div class="modal-overlay" id="image-modal" style="display:none;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(5px)" onclick="this.style.display='none'">
+  <img id="image-modal-img" style="max-width:90vw;max-height:90vh;border-radius:12px;object-fit:contain;box-shadow:0 10px 40px rgba(0,0,0,0.5);" />
+</div>
+
+<script>
+function openImageModal(src) {
+  if (!src) return;
+  document.getElementById('image-modal-img').src = src;
+  document.getElementById('image-modal').style.display = 'flex';
+}
+
+const myUser = getUser();
+const urlParams = new URLSearchParams(window.location.search);
+const profileId = urlParams.get('id') || myUser?.id;
+const isOwn = profileId === myUser?.id || profileId === myUser?._id;
+let profileUser = null;
+
+async function loadProfile() {
+  try {
+    const [uRes, pRes, lbRes] = await Promise.all([
+      apiFetch(`/users/${profileId}`),
+      apiFetch(`/users/${profileId}/posts`),
+      apiFetch('/leaderboard'),
+    ]);
+    profileUser = await uRes.json();
+    const posts = await pRes.json();
+    const lbEntries = await lbRes.json();
+    const myBadges = lbEntries.filter(e => (e.user?._id || e.user) === profileId).flatMap(e => e.badges || []);
+
+    // Fill header
+    document.getElementById('profile-avatar').src = avatarUrl(profileUser.avatar);
+    document.getElementById('profile-name').textContent = profileUser.fullName;
+    document.getElementById('profile-role-badge').innerHTML = roleBadge(profileUser.role);
+    document.getElementById('profile-email').textContent = profileUser.email;
+    document.getElementById('profile-bio').textContent = profileUser.bio || '';
+
+    const metas = [];
+    if (profileUser.department) metas.push(`🏛️ ${profileUser.department}`);
+    if (profileUser.company) metas.push(`🏢 ${profileUser.company}`);
+    if (profileUser.batch) metas.push(`🎓 Class of ${profileUser.batch}`);
+    document.getElementById('profile-meta').innerHTML = metas.map(m => `<span class="profile-meta-chip">${m}</span>`).join('');
+
+    const allSkills = [...(profileUser.skills||[]), ...(profileUser.subjects||[])];
+    if (allSkills.length) {
+      document.getElementById('profile-skills-wrap').style.display = '';
+      document.getElementById('profile-skills').innerHTML = allSkills.map(s => `<span class="skill-chip">${s}</span>`).join('');
+    }
+
+    // Stats
+    document.getElementById('stat-posts').textContent = posts.length;
+    document.getElementById('stat-badges').textContent = myBadges.length;
+    if (myBadges.length) {
+      document.getElementById('badges-wrap').style.display = '';
+      document.getElementById('badges-list').innerHTML = [...new Set(myBadges)].map(b => `<span class="badge-chip">${b}</span>`).join('');
+    }
+
+    // Action buttons
+    const actionsEl = document.getElementById('profile-actions');
+    if (isOwn) {
+      document.getElementById('avatar-upload-label').style.display = '';
+      actionsEl.innerHTML = `<button class="cb-btn cb-btn-primary" onclick="openEditModal()">✏️ Edit Profile</button>`;
+    } else {
+      actionsEl.innerHTML = `
+        <a href="dm.html?user=${profileUser._id}" class="cb-btn cb-btn-primary">✉️ Send Message</a>
+        <a href="mentorship.html" class="cb-btn cb-btn-secondary">🤝 Request Mentorship</a>`;
+    }
+
+    // Posts
+    const grid = document.getElementById('posts-grid');
+    if (!posts.length) {
+      grid.innerHTML = '<div class="empty-state"><p>No posts yet.</p></div>';
+    } else {
+      grid.innerHTML = '';
+      posts.forEach(p => grid.appendChild(buildPostCard(p)));
+    }
+
+    document.getElementById('page-content').style.display = '';
+  } catch (err) { console.error(err); }
+}
+
+// Avatar upload
+document.getElementById('avatar-file-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('avatar', file);
+  try {
+    const res = await apiFetch('/me/avatar', { method: 'POST', body: fd });
+    const data = await res.json();
+    document.getElementById('profile-avatar').src = avatarUrl(data.avatar);
+    document.getElementById('nav-avatar-img').src = avatarUrl(data.avatar);
+    const u = getUser();
+    u.avatar = data.avatar;
+    localStorage.setItem('cb_user', JSON.stringify(u));
+  } catch {}
+});
+
+function openEditModal() {
+  document.getElementById('edit-bio').value = profileUser?.bio || '';
+  document.getElementById('edit-dept').value = profileUser?.department || '';
+  const skills = [...(profileUser?.skills||[]), ...(profileUser?.subjects||[])];
+  document.getElementById('edit-skills').value = skills.join(', ');
+  if (profileUser?.role === 'Alumni') {
+    document.getElementById('edit-batch-group').style.display = '';
+    document.getElementById('edit-company-group').style.display = '';
+    document.getElementById('edit-batch').value = profileUser?.batch || '';
+    document.getElementById('edit-company').value = profileUser?.company || '';
+  }
+  document.getElementById('edit-modal').style.display = '';
+}
+
+async function saveProfile() {
+  const payload = {
+    bio: document.getElementById('edit-bio').value,
+    department: document.getElementById('edit-dept').value,
+    skills: document.getElementById('edit-skills').value.split(',').map(s=>s.trim()).filter(Boolean),
+    batch: document.getElementById('edit-batch').value,
+    company: document.getElementById('edit-company').value,
+  };
+  try {
+    const res = await apiFetch('/me', { method: 'PATCH', body: JSON.stringify(payload) });
+    profileUser = await res.json();
+    const u = getUser();
+    Object.assign(u, payload);
+    localStorage.setItem('cb_user', JSON.stringify(u));
+    document.getElementById('edit-modal').style.display = 'none';
+    loadProfile();
+  } catch {}
+}
+
+loadProfile();
+</script>
+</body>
+</html>

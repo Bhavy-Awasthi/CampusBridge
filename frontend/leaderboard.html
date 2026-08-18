@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Leaderboard — CampusBridge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0e1a;--surface:rgba(12,17,30,0.8);--border:rgba(245,158,11,0.12);--text:#f1f5f9;--muted:#a1a1aa;--dim:#57534e}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    .blob{position:fixed;pointer-events:none;z-index:0}
+    .blob-1{width:500px;height:500px;background:radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);top:-100px;right:-100px}
+    .page-wrap{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:1.5rem}
+
+    /* Top 3 Podium */
+    .podium{display:flex;align-items:flex-end;justify-content:center;gap:1rem;margin-bottom:2rem}
+    .podium-item{text-align:center;display:flex;flex-direction:column;align-items:center}
+    .podium-avatar{border-radius:50%;object-fit:cover;border:3px solid}
+    .podium-1 .podium-avatar{width:80px;height:80px;border-color:#f59e0b;box-shadow:0 0 24px rgba(245,158,11,0.4)}
+    .podium-2 .podium-avatar{width:64px;height:64px;border-color:#94a3b8}
+    .podium-3 .podium-avatar{width:56px;height:56px;border-color:#cd7f32}
+    .podium-medal{font-size:1.5rem;margin-bottom:0.25rem}
+    .podium-name{font-size:0.82rem;font-weight:600;color:#fff;margin:0.35rem 0 0.15rem;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .podium-sub{font-size:0.7rem;color:var(--muted)}
+    .podium-score{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:800;background:linear-gradient(90deg,#fbbf24,#14b8a6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .podium-base{margin-top:0.5rem;border-radius:8px 8px 0 0;width:80px}
+    .podium-1 .podium-base{height:60px;background:linear-gradient(135deg,rgba(245,158,11,0.3),rgba(245,158,11,0.1));border:1px solid rgba(245,158,11,0.3)}
+    .podium-2 .podium-base{height:40px;background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.2)}
+    .podium-3 .podium-base{height:28px;background:rgba(205,127,50,0.1);border:1px solid rgba(205,127,50,0.2)}
+
+    /* Table */
+    .lb-table{background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden;}
+    .lb-table-header{display:grid;grid-template-columns:60px 1fr 140px 100px;padding:0.75rem 1.25rem;background:rgba(10,14,26,0.55);border-bottom:1px solid rgba(245,158,11,0.08);font-size:0.72rem;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:0.5px}
+    .lb-row{display:grid;grid-template-columns:60px 1fr 140px 100px;padding:0.85rem 1.25rem;border-bottom:1px solid rgba(245,158,11,0.05);align-items:center;transition:background 0.2s}
+    .lb-row:last-child{border-bottom:none}
+    .lb-row:hover{background:rgba(245,158,11,0.04)}
+    .lb-rank{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:800;color:var(--dim);text-align:center}
+    .lb-rank.r1{color:#f59e0b}.lb-rank.r2{color:#94a3b8}.lb-rank.r3{color:#cd7f32}
+    .lb-user{display:flex;align-items:center;gap:0.75rem}
+    .lb-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(245,158,11,0.18);flex-shrink:0}
+    .lb-name{font-size:0.88rem;font-weight:600;color:#fff;text-decoration:none}
+    .lb-name:hover{color:#fbbf24}
+    .lb-dept{font-size:0.72rem;color:var(--muted)}
+    .lb-badges{display:flex;flex-wrap:wrap;gap:0.3rem}
+    .badge-chip{padding:0.15rem 0.5rem;background:radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%);border:1px solid rgba(245,158,11,0.2);border-radius:999px;font-size:0.62rem;color:#fbbf24}
+    .lb-score-cell{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:800;text-align:right;background:linear-gradient(90deg,#fbbf24,#14b8a6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+    /* Prof update score */
+    .score-panel{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:1.5rem;margin-bottom:1.5rem;}
+  </style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<script src="js/auth.js"></script>
+<script>renderNav('leaderboard');</script>
+
+<div class="page-wrap">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem">
+    <div class="page-header" style="margin-bottom:0"><h1>Leaderboard</h1><p>Top performers across all subjects</p></div>
+    <div style="display:flex;align-items:center;gap:0.75rem">
+      <label class="cb-label" style="margin:0">Filter by Subject:</label>
+      <select id="subject-filter" class="cb-input cb-select" style="width:auto" onchange="loadLeaderboard()">
+        <option value="">All Subjects</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Professor: Update Score -->
+  <div id="prof-score-panel" style="display:none" class="score-panel">
+    <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:#fff;margin-bottom:1rem">📊 Update Student Score</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0.75rem;align-items:flex-end">
+      <div><label class="cb-label">Student</label>
+        <select id="score-student" class="cb-input cb-select"><option value="">Select student...</option></select></div>
+      <div><label class="cb-label">Subject</label><input id="score-subject" class="cb-input" placeholder="e.g. Machine Learning"/></div>
+      <div><label class="cb-label">Score (0–100)</label><input id="score-val" class="cb-input" type="number" min="0" max="100" placeholder="85"/></div>
+      <button class="cb-btn cb-btn-primary" onclick="updateScore()">Update</button>
+    </div>
+  </div>
+
+  <!-- Podium -->
+  <div class="podium" id="podium"></div>
+
+  <!-- Table -->
+  <div class="lb-table" id="lb-table">
+    <div class="lb-table-header"><span style="text-align:center">Rank</span><span>Student</span><span>Badges</span><span style="text-align:right">Score</span></div>
+    <div id="lb-rows"><div style="text-align:center;padding:3rem"><span class="spinner"></span></div></div>
+  </div>
+</div>
+
+<script>
+const myUser = getUser();
+
+async function loadSubjects() {
+  try {
+    const res = await apiFetch('/leaderboard');
+    const entries = await res.json();
+    const subjects = [...new Set(entries.map(e => e.subject))];
+    const sel = document.getElementById('subject-filter');
+    subjects.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+  } catch {}
+}
+
+async function loadLeaderboard() {
+  const subject = document.getElementById('subject-filter').value;
+  const url = `/leaderboard${subject ? '?subject=' + encodeURIComponent(subject) : ''}`;
+  try {
+    const res = await apiFetch(url);
+    const entries = await res.json();
+    renderPodium(entries.slice(0, 3));
+    renderTable(entries);
+  } catch {}
+}
+
+function renderPodium(top3) {
+  const podium = document.getElementById('podium');
+  if (top3.length === 0) { podium.innerHTML = ''; return; }
+  const order = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3;
+  const baseHeights = ['40px', '60px', '28px'];
+  const medals = ['🥈', '🥇', '🥉'];
+  podium.innerHTML = order.map((e, i) => {
+    if (!e) return '<div class="podium-item"></div>';
+    const realRank = order.indexOf(e) === 1 ? 0 : order.indexOf(e) === 0 ? 1 : 2;
+    const ranks = [2, 1, 3];
+    return `<div class="podium-item podium-${ranks[i]}">
+      <div class="podium-medal">${medals[i]}</div>
+      <a href="profile.html?id=${e.user?._id}"><img src="${avatarUrl(e.user?.avatar)}" class="podium-avatar"/></a>
+      <div class="podium-name">${e.user?.fullName}</div>
+      <div class="podium-sub">${e.subject}</div>
+      <div class="podium-score">${e.score}</div>
+      <div class="podium-base"></div>
+    </div>`;
+  }).join('');
+}
+
+function renderTable(entries) {
+  const rows = document.getElementById('lb-rows');
+  if (!entries.length) { rows.innerHTML = '<div class="empty-state" style="padding:3rem"><p>No scores recorded yet.</p></div>'; return; }
+  rows.innerHTML = entries.map((e, i) => `
+    <div class="lb-row">
+      <span class="lb-rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</span>
+      <div class="lb-user">
+        <a href="profile.html?id=${e.user?._id}"><img src="${avatarUrl(e.user?.avatar)}" class="lb-avatar"/></a>
+        <div>
+          <a href="profile.html?id=${e.user?._id}" class="lb-name">${e.user?.fullName}</a>
+          <div class="lb-dept">${e.user?.department||e.subject}</div>
+        </div>
+      </div>
+      <div class="lb-badges">${(e.badges||[]).map(b=>`<span class="badge-chip">${b}</span>`).join('')}</div>
+      <div class="lb-score-cell">${e.score}</div>
+    </div>`).join('');
+}
+
+// Professor panel
+if (myUser?.role === 'Professor') {
+  document.getElementById('prof-score-panel').style.display = '';
+  (async () => {
+    const res = await apiFetch('/users?role=Student');
+    const students = await res.json();
+    const sel = document.getElementById('score-student');
+    students.forEach(s => { const o = document.createElement('option'); o.value = s._id; o.textContent = s.fullName; sel.appendChild(o); });
+  })();
+}
+
+async function updateScore() {
+  const userId = document.getElementById('score-student').value;
+  const subject = document.getElementById('score-subject').value;
+  const score = parseInt(document.getElementById('score-val').value);
+  if (!userId || !subject || isNaN(score)) { alert('Fill all fields.'); return; }
+  try {
+    await apiFetch('/leaderboard/score', { method: 'POST', body: JSON.stringify({ userId, subject, score }) });
+    loadLeaderboard(); loadSubjects();
+    document.getElementById('score-subject').value = '';
+    document.getElementById('score-val').value = '';
+  } catch {}
+}
+
+loadSubjects();
+loadLeaderboard();
+</script>
+</body>
+</html>

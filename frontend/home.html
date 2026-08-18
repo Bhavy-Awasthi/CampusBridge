@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CampusBridge — Bridging Every Campus Connection</title>
+  <meta name="description" content="CampusBridge is the intelligent platform that connects students, professors, and alumni — powering the next generation of campus collaboration." />
+  <meta name="keywords" content="campus network, student platform, university community, alumni connect, professor collaboration" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --clr-bg:        #0a0e1a;
+      --clr-surface:   rgba(12, 17, 30, 0.8);
+      --clr-surface2:  rgba(15, 20, 35, 0.6);
+      --clr-border:    rgba(245, 158, 11, 0.12);
+      --clr-border-h:  rgba(245, 158, 11, 0.4);
+      --clr-primary:   #f59e0b;
+      --clr-primary-d: #d97706;
+      --clr-accent:    #fbbf24;
+      --clr-cyan:      #14b8a6;
+      --clr-purple:    #fb7185;
+      --clr-emerald:   #10b981;
+      --clr-amber:     #f59e0b;
+      --clr-rose:      #f43f5e;
+      --clr-glow:      rgba(245, 158, 11, 0.45);
+      --clr-text:      #f1f5f9;
+      --clr-muted:     #a1a1aa;
+      --clr-dim:       #57534e;
+      --radius-card:   24px;
+      --transition:    0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      --nav-h:         72px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--clr-bg);
+      color: var(--clr-text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--clr-bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(245,158,11,0.35); border-radius: 3px; }
+
+    #canvas-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .blob-1 { width: 700px; height: 700px; background: rgba(245,158,11,0.12); top: -200px; left: -200px; animation: blobDrift1 12s ease-in-out infinite alternate; }
+    .blob-2 { width: 500px; height: 500px; background: rgba(20,184,166,0.07); bottom: -150px; right: -150px; animation: blobDrift2 15s ease-in-out infinite alternate; }
+    .blob-3 { width: 400px; height: 400px; background: rgba(251,113,133,0.08); top: 40%; left: 55%; animation: blobDrift3 10s ease-in-out infinite alternate; }
+    @keyframes blobDrift1 { to { transform: translate(60px, 40px) scale(1.08); } }
+    @keyframes blobDrift2 { to { transform: translate(-50px, -30px) scale(1.06); } }
+    @keyframes blobDrift3 { to { transform: translate(-40px, 50px) scale(1.1); } }
+
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(245,158,11,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245,158,11,0.025) 1px, transparent 1px);
+      background-size: 70px 70px;
+      mask-image: radial-gradient(ellipse 90% 80% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--nav-h);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      padding: 0 2rem;
+      background: rgba(10, 14, 26, 0.8);
+      backdrop-filter: blur(20px) saturate(160%);
+      border-bottom: 1px solid rgba(245,158,11,0.08);
+      transition: background var(--transition);
+    }
+    nav.scrolled {
+      background: rgba(10, 14, 26, 0.95);
+      border-bottom-color: rgba(245,158,11,0.15);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      margin-right: auto;
+    }
+    .nav-logo-mark {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #b45309, #d97706, #f59e0b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(245,158,11,0.45);
+      flex-shrink: 0;
+    }
+    .nav-logo-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .nav-logo-text span {
+      background: linear-gradient(90deg, #fbbf24, #14b8a6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--clr-muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: color var(--transition);
+    }
+    .nav-links a:hover { color: #fff; }
+
+    .nav-cta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-left: 2rem;
+    }
+    .btn-ghost {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--clr-border);
+      border-radius: 10px;
+      color: var(--clr-muted);
+      background: transparent;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.86rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    .btn-ghost:hover {
+      color: #fff;
+      border-color: var(--clr-border-h);
+      background: rgba(245,158,11,0.06);
+    }
+    .btn-primary {
+      padding: 0.55rem 1.4rem;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.86rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: var(--transition);
+      box-shadow: 0 4px 20px rgba(245,158,11,0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(245,158,11,0.5);
+    }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 4px;
+      margin-left: auto;
+    }
+    .hamburger span {
+      display: block;
+      width: 22px; height: 2px;
+      background: var(--clr-muted);
+      border-radius: 2px;
+    }
+
+    /* HERO */
+    .hero {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: calc(var(--nav-h) + 4rem) 1.5rem 5rem;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1.1rem;
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 999px;
+      background: rgba(245,158,11,0.06);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--clr-accent);
+      letter-spacing: 0.5px;
+      margin-bottom: 2rem;
+      animation: fadeSlideUp 0.8s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--clr-cyan);
+      animation: dotPulse 2s ease-in-out infinite;
+    }
+    @keyframes dotPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    .hero h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.6rem, 6vw, 5.2rem);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -2px;
+      color: #fff;
+      max-width: 820px;
+      margin-bottom: 1.6rem;
+      animation: fadeSlideUp 0.8s 0.1s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, #fbbf24 0%, #14b8a6 50%, #fb7185 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--clr-muted);
+      max-width: 580px;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+      animation: fadeSlideUp 0.8s 0.2s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 3rem;
+      animation: fadeSlideUp 0.8s 0.3s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .btn-hero-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.9rem 2rem;
+      background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #f59e0b 100%);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 14px;
+      text-decoration: none;
+      box-shadow: 0 6px 32px rgba(245,158,11,0.45), 0 0 0 1px rgba(255,255,255,0.08) inset;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-hero-primary::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent);
+      transition: left 0.5s;
+    }
+    .btn-hero-primary:hover::before { left: 100%; }
+    .btn-hero-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px rgba(245,158,11,0.6);
+    }
+
+    .btn-hero-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.9rem 2rem;
+      border: 1px solid var(--clr-border);
+      border-radius: 14px;
+      color: var(--clr-text);
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      text-decoration: none;
+      background: rgba(15,20,35,0.6);
+      backdrop-filter: blur(12px);
+      transition: var(--transition);
+    }
+    .btn-hero-secondary:hover {
+      border-color: var(--clr-border-h);
+      background: rgba(30,40,70,0.7);
+      transform: translateY(-2px);
+    }
+
+    .hero-stats {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeSlideUp 0.8s 0.4s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat-val {
+      display: block;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #fbbf24, #14b8a6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+    .hero-stat-lbl { font-size: 0.78rem; color: var(--clr-dim); letter-spacing: 0.5px; font-weight: 500; }
+    .hero-stat-div { width: 1px; height: 40px; background: linear-gradient(to bottom, transparent, rgba(245,158,11,0.25), transparent); }
+
+    /* Mockup */
+    .hero-visual {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 900px;
+      margin: 4rem auto 0;
+      padding: 0 1rem;
+      animation: fadeSlideUp 0.9s 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .mockup-card {
+      background: var(--clr-surface);
+      border: 1px solid var(--clr-border);
+      border-radius: 20px;
+      backdrop-filter: blur(24px);
+      overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+    }
+    .mockup-topbar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.9rem 1.2rem;
+      border-bottom: 1px solid rgba(245,158,11,0.08);
+      background: rgba(10,14,26,0.5);
+    }
+    .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mockup-dot.r { background: #f43f5e; }
+    .mockup-dot.y { background: #f59e0b; }
+    .mockup-dot.g { background: #10b981; }
+    .mockup-url {
+      flex: 1;
+      margin: 0 0.75rem;
+      height: 24px;
+      background: rgba(15,20,35,0.8);
+      border-radius: 6px;
+      border: 1px solid rgba(245,158,11,0.1);
+      display: flex;
+      align-items: center;
+      padding: 0 0.75rem;
+      font-size: 0.7rem;
+      color: var(--clr-dim);
+    }
+    .mockup-url span { color: var(--clr-cyan); margin-right: 0.25rem; }
+    .mockup-content {
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 1rem;
+      min-height: 240px;
+    }
+    .mockup-sidebar {
+      background: rgba(10,14,26,0.5);
+      border-radius: 12px;
+      border: 1px solid rgba(245,158,11,0.06);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.55rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      color: var(--clr-muted);
+    }
+    .sidebar-item.active {
+      background: rgba(245,158,11,0.12);
+      color: var(--clr-accent);
+    }
+    .sidebar-icon {
+      width: 18px; height: 18px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      flex-shrink: 0;
+    }
+    .mockup-main { display: flex; flex-direction: column; gap: 0.75rem; }
+    .dash-card {
+      background: rgba(10,14,26,0.5);
+      border: 1px solid rgba(245,158,11,0.08);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+    }
+    .dash-card-title { font-size: 0.68rem; font-weight: 600; color: var(--clr-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.6rem; }
+    .dash-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .dash-pill { padding: 0.25rem 0.7rem; border-radius: 999px; font-size: 0.67rem; font-weight: 500; }
+    .dash-pill.indigo { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+    .dash-pill.cyan   { background: rgba(34,211,238,0.15); color: #14b8a6; border: 1px solid rgba(34,211,238,0.25); }
+    .dash-pill.purple { background: rgba(251,113,133,0.1); color: #fb7185; border: 1px solid rgba(168,85,247,0.25); }
+    .dash-pill.emerald{ background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+    .dash-activity { display: flex; flex-direction: column; gap: 0.4rem; }
+    .activity-row { display: flex; align-items: center; gap: 0.6rem; font-size: 0.7rem; color: var(--clr-muted); }
+    .activity-avatar { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; color: #fff; }
+
+    /* Section */
+    section { position: relative; z-index: 10; }
+    .section-inner { max-width: 1160px; margin: 0 auto; padding: 4rem 1.5rem; }
+    .section-label {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--clr-accent); margin-bottom: 1rem;
+    }
+    .section-label::before { content: ''; display: block; width: 20px; height: 2px; background: var(--clr-accent); border-radius: 1px; }
+    .section-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; letter-spacing: -1px; color: #fff; line-height: 1.15; margin-bottom: 1rem; }
+    .section-sub { font-size: 1.05rem; color: var(--clr-muted); max-width: 560px; line-height: 1.7; }
+
+    /* Trusted */
+    .trusted { border-top: 1px solid rgba(245,158,11,0.06); border-bottom: 1px solid rgba(245,158,11,0.06); background: rgba(10,14,26,0.5); }
+    .trusted .section-inner { padding: 2.5rem 1.5rem; display: flex; align-items: center; gap: 2rem; flex-wrap: wrap; justify-content: center; }
+    .trusted-label { font-size: 0.78rem; font-weight: 500; color: var(--clr-dim); letter-spacing: 0.5px; white-space: nowrap; }
+    .trusted-logos { display: flex; align-items: center; gap: 2.5rem; flex-wrap: wrap; justify-content: center; }
+    .trusted-logo { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700; color: rgba(148,163,184,0.35); letter-spacing: -0.5px; transition: color 0.3s; }
+    .trusted-logo:hover { color: rgba(148,163,184,0.75); }
+
+    /* Features */
+    #features .section-inner { padding-top: 7rem; padding-bottom: 7rem; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 3.5rem; }
+
+    .feature-card {
+      background: var(--clr-surface);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-card);
+      padding: 2rem;
+      backdrop-filter: blur(20px);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(245,158,11,0.05), transparent 40%);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card:hover { border-color: rgba(245,158,11,0.25); transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04) inset; }
+
+    .feature-icon { width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; font-size: 1.5rem; }
+    .fi-indigo  { background: rgba(245,158,11,0.12); }
+    .fi-cyan    { background: rgba(20,184,166,0.1); }
+    .fi-purple  { background: rgba(251,113,133,0.1); }
+    .fi-emerald { background: rgba(16,185,129,0.12); }
+    .fi-amber   { background: rgba(245,158,11,0.12); }
+    .fi-rose    { background: rgba(244,63,94,0.12);  }
+
+    .feature-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 0.6rem; }
+    .feature-card p  { font-size: 0.88rem; color: var(--clr-muted); line-height: 1.65; }
+    .feature-tag { display: inline-flex; margin-top: 1.1rem; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.3px; }
+    .ft-indigo  { background: rgba(245,158,11,0.12); color: #fbbf24; }
+    .ft-cyan    { background: rgba(20,184,166,0.1); color: #14b8a6; }
+    .ft-purple  { background: rgba(251,113,133,0.08); color: #fb7185; }
+    .ft-emerald { background: rgba(16,185,129,0.12); color: #34d399; }
+    .ft-amber   { background: rgba(245,158,11,0.12); color: #fbbf24; }
+    .ft-rose    { background: rgba(244,63,94,0.12);  color: #fb7185; }
+
+    .feature-card.span-2 { grid-column: span 2; }
+    .feature-card.featured { background: linear-gradient(135deg, rgba(217,119,6,0.15) 0%, rgba(245,158,11,0.06) 100%); border-color: rgba(245,158,11,0.25); }
+
+    /* Roles */
+    #roles { background: rgba(10,14,26,0.5); }
+    #roles .section-inner { padding: 5rem 1.5rem; }
+    .roles-header { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 3rem; }
+
+    .roles-tabs { display: flex; gap: 0.5rem; background: rgba(12,17,30,0.8); border: 1px solid var(--clr-border); border-radius: 14px; padding: 5px; margin-bottom: 3rem; }
+    .role-tab { padding: 0.65rem 1.5rem; border-radius: 10px; border: none; background: transparent; color: var(--clr-muted); font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 0.5rem; }
+    .role-tab.active { background: linear-gradient(135deg, #d97706, #f59e0b); color: #fff; box-shadow: 0 4px 20px rgba(245,158,11,0.35); }
+
+    .roles-content { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    .role-panel { display: none; }
+    .role-panel.active { display: contents; }
+
+    .role-benefits { list-style: none; display: flex; flex-direction: column; gap: 1rem; }
+    .role-benefits li { display: flex; align-items: flex-start; gap: 0.85rem; font-size: 0.92rem; color: var(--clr-muted); }
+    .benefit-check { width: 22px; height: 22px; border-radius: 8px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; font-size: 0.7rem; color: #34d399; }
+    .benefit-text strong { color: var(--clr-text); display: block; font-size: 0.95rem; margin-bottom: 0.1rem; }
+
+    .role-visual { background: var(--clr-surface); border: 1px solid var(--clr-border); border-radius: 20px; padding: 1.5rem; backdrop-filter: blur(20px); }
+    .role-profile-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .role-avatar { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; flex-shrink: 0; box-shadow: 0 0 20px rgba(245,158,11,0.35); color: #fff; }
+    .ra-student { background: linear-gradient(135deg, #d97706, #fbbf24); }
+    .ra-prof    { background: linear-gradient(135deg, #0e7490, #14b8a6); }
+    .ra-alumni  { background: linear-gradient(135deg, #7c3aed, #fb7185); }
+    .role-profile-info h4 { font-size: 0.95rem; font-weight: 700; color: #fff; }
+    .role-profile-info p  { font-size: 0.75rem; color: var(--clr-muted); margin-top: 0.1rem; }
+    .role-badge { margin-left: auto; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.68rem; font-weight: 600; }
+    .rb-student { background: rgba(245,158,11,0.12); color: #fbbf24; }
+    .rb-prof    { background: rgba(20,184,166,0.1); color: #14b8a6; }
+    .rb-alumni  { background: rgba(251,113,133,0.1); color: #fb7185; }
+    .role-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.25rem; }
+    .role-metric { background: rgba(10,14,26,0.55); border: 1px solid rgba(245,158,11,0.08); border-radius: 12px; padding: 0.75rem; text-align: center; }
+    .rm-val { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 700; background: linear-gradient(90deg, #fbbf24, #14b8a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .rm-lbl { font-size: 0.65rem; color: var(--clr-dim); margin-top: 0.1rem; }
+    .role-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .role-tag { padding: 0.3rem 0.75rem; border-radius: 8px; font-size: 0.72rem; font-weight: 500; background: rgba(15,20,35,0.8); border: 1px solid rgba(245,158,11,0.1); color: var(--clr-muted); }
+
+    /* How It Works */
+    #howitworks .section-inner { padding: 5rem 1.5rem; }
+    .how-header { text-align: center; margin-bottom: 3rem; }
+    .how-header .section-sub { margin: 0 auto; }
+
+    .steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; position: relative; }
+    .steps-grid::before { content: ''; position: absolute; top: 36px; left: 10%; right: 10%; height: 1px; background: linear-gradient(90deg, transparent, rgba(245,158,11,0.25), rgba(20,184,166,0.25), transparent); pointer-events: none; }
+
+    .step-card { text-align: center; padding: 2rem 1.25rem; background: var(--clr-surface); border: 1px solid var(--clr-border); border-radius: 20px; backdrop-filter: blur(16px); transition: var(--transition); }
+    .step-card:hover { border-color: rgba(245,158,11,0.25); transform: translateY(-4px); box-shadow: 0 16px 50px rgba(0,0,0,0.4); }
+    .step-num { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 800; margin: 0 auto 1.25rem; }
+    .sn-1 { background: linear-gradient(135deg, #d97706, #f59e0b); box-shadow: 0 0 25px rgba(245,158,11,0.35); color: #fff; }
+    .sn-2 { background: linear-gradient(135deg, #0e7490, #14b8a6); box-shadow: 0 0 25px rgba(20,184,166,0.25); color: #fff; }
+    .sn-3 { background: linear-gradient(135deg, #7c3aed, #fb7185); box-shadow: 0 0 25px rgba(168,85,247,0.3); color: #fff; }
+    .sn-4 { background: linear-gradient(135deg, #065f46, #10b981); box-shadow: 0 0 25px rgba(16,185,129,0.3); color: #fff; }
+    .step-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
+    .step-card p  { font-size: 0.83rem; color: var(--clr-muted); line-height: 1.6; }
+
+    /* Testimonials */
+    #testimonials { background: rgba(10,14,26,0.5); }
+    #testimonials .section-inner { padding: 5rem 1.5rem; }
+    .testimonials-header { text-align: center; margin-bottom: 3rem; }
+    .testimonials-header .section-sub { margin: 0 auto; }
+
+    .testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .testimonial-card { background: var(--clr-surface); border: 1px solid var(--clr-border); border-radius: var(--radius-card); padding: 1.75rem; backdrop-filter: blur(20px); transition: var(--transition); }
+    .testimonial-card:hover { border-color: rgba(245,158,11,0.22); transform: translateY(-3px); box-shadow: 0 16px 50px rgba(0,0,0,0.35); }
+    .quote-mark { font-size: 3rem; line-height: 1; font-family: Georgia, serif; background: linear-gradient(90deg, #d97706, #14b8a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem; display: block; }
+    .testimonial-card p { font-size: 0.9rem; color: var(--clr-muted); line-height: 1.7; margin-bottom: 1.25rem; font-style: italic; }
+    .testimonial-author { display: flex; align-items: center; gap: 0.75rem; }
+    .t-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; flex-shrink: 0; color: #fff; }
+    .ta-1 { background: linear-gradient(135deg, #d97706, #fbbf24); }
+    .ta-2 { background: linear-gradient(135deg, #0e7490, #14b8a6); }
+    .ta-3 { background: linear-gradient(135deg, #7c3aed, #fb7185); }
+    .ta-4 { background: linear-gradient(135deg, #065f46, #10b981); }
+    .ta-5 { background: linear-gradient(135deg, #9f1239, #f43f5e); }
+    .ta-6 { background: linear-gradient(135deg, #92400e, #f59e0b); }
+    .t-info h5 { font-size: 0.87rem; font-weight: 700; color: #fff; }
+    .t-info p  { font-size: 0.72rem; color: var(--clr-dim); margin-top: 0.1rem; }
+    .t-stars { margin-left: auto; color: #f59e0b; font-size: 0.75rem; letter-spacing: 1px; }
+
+    /* Stats */
+    #stats { border-top: 1px solid rgba(245,158,11,0.06); border-bottom: 1px solid rgba(245,158,11,0.06); }
+    #stats .section-inner { padding: 5rem 1.5rem; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    .stat-box { text-align: center; padding: 2rem 1rem; background: var(--clr-surface); border: 1px solid var(--clr-border); border-radius: 20px; backdrop-filter: blur(16px); transition: var(--transition); }
+    .stat-box:hover { border-color: rgba(245,158,11,0.25); transform: translateY(-3px); }
+    .stat-box-val { font-family: 'Space Grotesk', sans-serif; font-size: 2.8rem; font-weight: 800; background: linear-gradient(135deg, #fbbf24, #14b8a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; margin-bottom: 0.4rem; }
+    .stat-box-lbl { font-size: 0.85rem; color: var(--clr-muted); font-weight: 500; }
+    .stat-box-sub { font-size: 0.73rem; color: var(--clr-dim); margin-top: 0.25rem; }
+
+    /* CTA */
+    #cta .section-inner { padding: 5rem 1.5rem; }
+    .cta-box { text-align: center; max-width: 720px; margin: 0 auto; padding: 4rem 2rem; background: linear-gradient(135deg, rgba(217,119,6,0.15) 0%, rgba(245,158,11,0.06) 50%, rgba(251,113,133,0.08) 100%); border: 1px solid rgba(245,158,11,0.2); border-radius: 32px; backdrop-filter: blur(24px); position: relative; overflow: hidden; }
+    .cta-box::before { content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px; background: linear-gradient(90deg, transparent, #f59e0b, #14b8a6, #f59e0b, transparent); background-size: 200% 100%; animation: shimmer 4s linear infinite; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .cta-box h2 { font-family: 'Space Grotesk', sans-serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; letter-spacing: -1px; color: #fff; margin-bottom: 1rem; }
+    .cta-box p { font-size: 1rem; color: var(--clr-muted); max-width: 480px; margin: 0 auto 2.5rem; line-height: 1.7; }
+    .cta-actions { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+    .cta-secure { margin-top: 1.5rem; font-size: 0.75rem; color: var(--clr-dim); display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+
+    /* Footer */
+    footer { position: relative; z-index: 10; border-top: 1px solid rgba(245,158,11,0.06); padding: 3rem 1.5rem; }
+    .footer-inner { max-width: 1160px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; }
+    .footer-logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+    .footer-logo-mark { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, #d97706, #7c3aed); display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-size: 0.8rem; font-weight: 700; color: #fff; }
+    .footer-logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700; color: var(--clr-muted); }
+    .footer-copy { font-size: 0.78rem; color: var(--clr-dim); }
+    .footer-links { display: flex; gap: 1.5rem; }
+    .footer-links a { font-size: 0.82rem; color: var(--clr-dim); text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--clr-accent); }
+
+    /* Animations */
+    @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .feature-card.span-2 { grid-column: span 1; }
+      .steps-grid { grid-template-columns: 1fr 1fr; }
+      .steps-grid::before { display: none; }
+      .testimonials-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .roles-content { grid-template-columns: 1fr; }
+      .mockup-content { grid-template-columns: 1fr; }
+      .mockup-sidebar { display: none; }
+    }
+    @media (max-width: 640px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .nav-links, .nav-cta { display: none; }
+      .hamburger { display: flex; }
+      .roles-tabs { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="canvas-bg"></canvas>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="grid-overlay"></div>
+
+  <!-- NAV -->
+  <nav id="navbar">
+    <a href="home.html" class="nav-logo">
+      <div class="nav-logo-mark">CB</div>
+      <span class="nav-logo-text">Campus<span>Bridge</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#roles">For You</a></li>
+      <li><a href="#howitworks">How It Works</a></li>
+      <li><a href="#testimonials">Testimonials</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="index.html" class="btn-ghost">Sign In</a>
+      <a href="index.html" class="btn-primary">Get Started</a>
+    </div>
+    <div class="hamburger" id="hamburger">
+      <span></span><span></span><span></span>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      🎓 Trusted by 17,000+ campus members worldwide
+    </div>
+
+    <h1>Your Campus,<br/><span class="gradient-text">Smarter &amp; Connected</span></h1>
+
+    <p>CampusBridge unifies students, professors, and alumni on one intelligent platform — enabling seamless collaboration, mentorship, and career growth across your entire campus network.</p>
+
+    <div class="hero-actions">
+      <a href="index.html" class="btn-hero-primary" id="hero-join-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Join CampusBridge Free
+      </a>
+      <a href="#features" class="btn-hero-secondary" id="hero-explore-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Explore Features
+      </a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="hero-stat-val">12K+</span><span class="hero-stat-lbl">Students Enrolled</span></div>
+      <div class="hero-stat-div"></div>
+      <div class="hero-stat"><span class="hero-stat-val">800+</span><span class="hero-stat-lbl">Active Professors</span></div>
+      <div class="hero-stat-div"></div>
+      <div class="hero-stat"><span class="hero-stat-val">5K+</span><span class="hero-stat-lbl">Alumni Network</span></div>
+      <div class="hero-stat-div"></div>
+      <div class="hero-stat"><span class="hero-stat-val">98%</span><span class="hero-stat-lbl">Satisfaction Rate</span></div>
+    </div>
+
+    <!-- Dashboard Mockup -->
+    <div class="hero-visual">
+      <div class="mockup-card">
+        <div class="mockup-topbar">
+          <div class="mockup-dot r"></div>
+          <div class="mockup-dot y"></div>
+          <div class="mockup-dot g"></div>
+          <div class="mockup-url"><span>🔒</span> campusbridge.edu/dashboard</div>
+        </div>
+        <div class="mockup-content">
+          <div class="mockup-sidebar">
+            <div class="sidebar-item active"><div class="sidebar-icon" style="background:rgba(245,158,11,0.15)">🏠</div>Dashboard</div>
+            <div class="sidebar-item"><div class="sidebar-icon" style="background:rgba(34,211,238,0.15)">📚</div>Courses</div>
+            <div class="sidebar-item"><div class="sidebar-icon" style="background:radial-gradient(circle, rgba(251,113,133,0.15) 0%, transparent 70%)">💼</div>Mentorship</div>
+            <div class="sidebar-item"><div class="sidebar-icon" style="background:rgba(245,158,11,0.15)">🏆</div>Leaderboard</div>
+            <div class="sidebar-item"><div class="sidebar-icon" style="background:rgba(16,185,129,0.15)">🤝</div>Alumni Net</div>
+            <div class="sidebar-item"><div class="sidebar-icon" style="background:rgba(244,63,94,0.15)">📢</div>Notices</div>
+          </div>
+          <div class="mockup-main">
+            <div class="dash-card">
+              <div class="dash-card-title">Your Active Subjects</div>
+              <div class="dash-pills">
+                <span class="dash-pill indigo">Data Structures</span>
+                <span class="dash-pill cyan">Machine Learning</span>
+                <span class="dash-pill purple">Web Dev</span>
+                <span class="dash-pill emerald">Algorithms</span>
+              </div>
+            </div>
+            <div class="dash-card">
+              <div class="dash-card-title">Recent Activity</div>
+              <div class="dash-activity">
+                <div class="activity-row">
+                  <div class="activity-avatar" style="background:linear-gradient(135deg,#d97706,#fbbf24)">S</div>
+                  <span><strong style="color:#e2e8f0">Smriti A.</strong> posted notes in Machine Learning</span>
+                </div>
+                <div class="activity-row">
+                  <div class="activity-avatar" style="background:linear-gradient(135deg,#0d9488,#14b8a6)">P</div>
+                  <span><strong style="color:#e2e8f0">Prof. Mehta</strong> shared assignment for Data Structures</span>
+                </div>
+                <div class="activity-row">
+                  <div class="activity-avatar" style="background:linear-gradient(135deg,#e11d48,#fb7185)">A</div>
+                  <span><strong style="color:#e2e8f0">Rohan K. (Alumni)</strong> opened a mentorship session</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUSTED -->
+  <section class="trusted">
+    <div class="section-inner">
+      <span class="trusted-label">TRUSTED BY CAMPUSES AT</span>
+      <div class="trusted-logos">
+        <span class="trusted-logo">MIT Institute</span>
+        <span class="trusted-logo">IIT Bombay</span>
+        <span class="trusted-logo">Stanford</span>
+        <span class="trusted-logo">VIT Vellore</span>
+        <span class="trusted-logo">BITS Pilani</span>
+        <span class="trusted-logo">NIT Trichy</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="section-inner">
+      <div class="reveal">
+        <div class="section-label">Platform Features</div>
+        <h2 class="section-title">Everything your campus<br/>needs, in one place</h2>
+        <p class="section-sub">From smart classrooms to alumni networks — CampusBridge brings every campus touchpoint together with intelligence built in.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card featured span-2 reveal reveal-delay-1">
+          <div class="feature-icon fi-indigo">🧠</div>
+          <h3>AI-Powered Course Hub</h3>
+          <p>Upload notes, assignments, and resources. Our AI surfaces the most relevant material for each student, flags gaps in understanding, and auto-generates practice quizzes from lecture content — saving professors hours every week.</p>
+          <span class="feature-tag ft-indigo">AI · Smart Learning</span>
+        </div>
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon fi-cyan">🤝</div>
+          <h3>Mentorship Marketplace</h3>
+          <p>Students connect with alumni mentors based on career goals, skills, and industry. Schedule 1-on-1 sessions, share progress, and get real-world career guidance.</p>
+          <span class="feature-tag ft-cyan">Alumni · Mentorship</span>
+        </div>
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon fi-purple">📢</div>
+          <h3>Smart Notice Board</h3>
+          <p>Professors post announcements, deadlines, and events. Students get personalized notifications sorted by relevance — no more buried emails or missed deadlines.</p>
+          <span class="feature-tag ft-purple">Notifications · Smart</span>
+        </div>
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon fi-emerald">🏆</div>
+          <h3>Leaderboard &amp; Badges</h3>
+          <p>Gamify academic achievement with real-time leaderboards per subject. Earn badges for consistency, top scores, and peer contributions. Healthy competition made fun.</p>
+          <span class="feature-tag ft-emerald">Gamification · Rewards</span>
+        </div>
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon fi-amber">🌐</div>
+          <h3>Alumni Network</h3>
+          <p>A verified, searchable alumni directory with career timelines and referral opportunities. Alumni can post job openings exclusively for their campus peers.</p>
+          <span class="feature-tag ft-amber">Network · Jobs</span>
+        </div>
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon fi-rose">🔒</div>
+          <h3>Secure &amp; Private</h3>
+          <p>End-to-end encryption for all data, role-based access controls, and university-grade security. Your campus data stays on campus — always.</p>
+          <span class="feature-tag ft-rose">Security · Privacy</span>
+        </div>
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon fi-indigo">📊</div>
+          <h3>Analytics Dashboard</h3>
+          <p>Professors get deep insights into student engagement, assignment completion rates, and at-risk students needing extra attention — all in a beautiful real-time dashboard.</p>
+          <span class="feature-tag ft-indigo">Analytics · Insights</span>
+        </div>
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon fi-cyan">💬</div>
+          <h3>Real-time Collaboration</h3>
+          <p>Study groups, project rooms, and peer-to-peer chat all in one place. Co-edit documents, share code snippets, and video call — no third-party tools needed.</p>
+          <span class="feature-tag ft-cyan">Collaboration · Chat</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROLES -->
+  <section id="roles">
+    <div class="section-inner">
+      <div class="roles-header reveal">
+        <div class="section-label">Tailored For Everyone</div>
+        <h2 class="section-title">Built for every role<br/>on campus</h2>
+        <p class="section-sub">Whether you're a student, professor, or alumni — CampusBridge adapts to your unique needs with a dedicated feature set just for you.</p>
+      </div>
+      <div style="display:flex;justify-content:center;margin-bottom:2.5rem;">
+        <div class="roles-tabs reveal reveal-delay-1">
+          <button class="role-tab active" id="tab-student" onclick="switchRole('student')">🎓 Student</button>
+          <button class="role-tab" id="tab-professor" onclick="switchRole('professor')">🧑‍🏫 Professor</button>
+          <button class="role-tab" id="tab-alumni" onclick="switchRole('alumni')">💼 Alumni</button>
+        </div>
+      </div>
+
+      <!-- Student -->
+      <div id="panel-student" class="role-panel active">
+        <div class="roles-content">
+          <div>
+            <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:1.5rem;">Power up your<br/>academic journey</h3>
+            <ul class="role-benefits">
+              <li><div class="benefit-check">✓</div><div class="benefit-text"><strong>AI Study Companion</strong>Get personalized study plans, smart quiz generation, and AI explanations for tough topics.</div></li>
+              <li><div class="benefit-check">✓</div><div class="benefit-text"><strong>Leaderboard Rankings</strong>Track your progress per subject and earn badges to showcase your academic wins.</div></li>
+              <li><div class="benefit-check">✓</div><div class="benefit-text"><strong>Mentorship Access</strong>Connect with alumni in your dream career path for guidance, referrals, and advice.</div></li>
+              <li><div class="benefit-check">✓</div><div class="benefit-text"><strong>Smart Notices</strong>Never miss a deadline — get personalized, priority-sorted notifications for all your courses.</div></li>
+            </ul>
+          </div>
+          <div class="role-visual reveal reveal-delay-2">
+            <div class="role-profile-header">
+              <div class="role-avatar ra-student">A</div>
+              <div class="role-profile-info"><h4>Aarav Sharma</h4><p>3rd Year · Computer Science</p></div>
+              <span class="role-badge rb-student">Student</span>
+            </div>
+            <div class="role-metrics">
+              <div class="role-metric"><div class="rm-val">94%</div><div class="rm-lbl">Attendance</div></div>
+              <div class="role-metric"><div class="rm-val">#3</div><div class="rm-lbl">ML Rank</div></div>
+              <div class="role-metric"><div class="rm-val">12</div><div class="rm-lbl">Badges</div></div>
+            </div>
+            <div class="role-tags">
+              <span class="role-tag">Data Structures</span>
+              <span class="role-tag">Machine Learning</span>
+              <span class="role-tag">Algorithms</span>
+              <span class="role-tag">Web Dev</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Professor -->
+      <div id="panel-professor" class="role-panel">
+        <div class="roles-content">
+          <div>
+            <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:1.5rem;">Teach smarter,<br/>not harder</h3>
+            <ul class="role-benefits">
+              <li><div class="benefit-check">✓</div><div class="benefit-text"><strong>Student Analytics</strong>See real-time engagement, at-risk flags, and performance trends across all your courses.</div></li>
+              <li><div class="benefit-check">✓</div><div class="benefit-text"><strong>Smart Notice Board</strong>Post assignments, announcements, and events — they reach every student instantly.</div></li>
+              <li><div class="benefit-check">✓</div><div class="benefit-text"><strong>AI Quiz Generator</strong>Upload lecture notes and auto-generate MCQs and assignments in seconds.</div></li>
+              <li><div class="benefit-check">✓</div><div class="benefit-text"><strong>Grade Management</strong>Streamlined grading, feedback tools, and auto-calculated leaderboard updates.</div></li>
+            </ul>
+          </div>
+          <div class="role-visual reveal reveal-delay-2">
+            <div class="role-profile-header">
+              <div class="role-avatar ra-prof">P</div>
+              <div class="role-profile-info"><h4>Prof. Kiran Mehta</h4><p>Department of CS · 14 yrs experience</p></div>
+              <span class="role-badge rb-prof">Professor</span>
+            </div>
+            <div class="role-metrics">
+              <div class="role-metric"><div class="rm-val">340</div><div class="rm-lbl">Students</div></div>
+              <div class="role-metric"><div class="rm-val">5</div><div class="rm-lbl">Courses</div></div>
+              <div class="role-metric"><div class="rm-val">4.9★</div><div class="rm-lbl">Rating</div></div>
+            </div>
+            <div class="role-tags">
+              <span class="role-tag">Data Structures</span>
+              <span class="role-tag">Algorithms</span>
+              <span class="role-tag">OS</span>
+              <span class="role-tag">AI Fundamentals</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alumni -->
+      <div id="panel-alumni" class="role-panel">
+        <div class="roles-content">
+          <div>
+            <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:1.5rem;">Give back, grow<br/>your legacy</h3>
+            <ul class="role-benefits">
+              <li><div class="benefit-check">✓</div><div class="benefit-text"><strong>Mentor Students</strong>Open mentorship sessions and help students navigate the career path you've walked.</div></li>
+              <li><div class="benefit-check">✓</div><div class="benefit-text"><strong>Post Job Openings</strong>Refer talented juniors directly — post exclusive campus job listings and internship openings.</div></li>
+              <li><div class="benefit-check">✓</div><div class="benefit-text"><strong>Campus Network</strong>Stay connected with professors and peers through your verified alumni profile.</div></li>
+              <li><div class="benefit-check">✓</div><div class="benefit-text"><strong>Guest Lectures</strong>Sign up to host virtual sessions, workshops, and AMA events with current students.</div></li>
+            </ul>
+          </div>
+          <div class="role-visual reveal reveal-delay-2">
+            <div class="role-profile-header">
+              <div class="role-avatar ra-alumni">R</div>
+              <div class="role-profile-info"><h4>Rohan Kapoor</h4><p>SWE @ Google · Class of 2021</p></div>
+              <span class="role-badge rb-alumni">Alumni</span>
+            </div>
+            <div class="role-metrics">
+              <div class="role-metric"><div class="rm-val">8</div><div class="rm-lbl">Mentees</div></div>
+              <div class="role-metric"><div class="rm-val">3</div><div class="rm-lbl">Jobs Posted</div></div>
+              <div class="role-metric"><div class="rm-val">5★</div><div class="rm-lbl">Rating</div></div>
+            </div>
+            <div class="role-tags">
+              <span class="role-tag">Backend</span>
+              <span class="role-tag">System Design</span>
+              <span class="role-tag">FAANG Prep</span>
+              <span class="role-tag">Open Source</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="howitworks">
+    <div class="section-inner">
+      <div class="how-header reveal">
+        <div class="section-label">Getting Started</div>
+        <h2 class="section-title">Up and running in minutes</h2>
+        <p class="section-sub">CampusBridge is designed to be instant — no complex setup, no IT department required.</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card reveal reveal-delay-1">
+          <div class="step-num sn-1">1</div>
+          <h3>Create Your Account</h3>
+          <p>Sign up in under 30 seconds with your university email. Choose your role — Student, Professor, or Alumni.</p>
+        </div>
+        <div class="step-card reveal reveal-delay-2">
+          <div class="step-num sn-2">2</div>
+          <h3>Set Up Your Profile</h3>
+          <p>Add your department, courses, and interests. Our AI recommends the right connections and content instantly.</p>
+        </div>
+        <div class="step-card reveal reveal-delay-3">
+          <div class="step-num sn-3">3</div>
+          <h3>Join Your Campus</h3>
+          <p>Get auto-enrolled in your courses, see your leaderboard, and receive your first personalized smart notices.</p>
+        </div>
+        <div class="step-card reveal reveal-delay-4">
+          <div class="step-num sn-4">4</div>
+          <h3>Grow &amp; Collaborate</h3>
+          <p>Connect with mentors, work with peers, post to alumni jobs, and track your academic growth — all in one place.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section id="testimonials">
+    <div class="section-inner">
+      <div class="testimonials-header reveal">
+        <div class="section-label">Testimonials</div>
+        <h2 class="section-title">Loved by campus communities</h2>
+        <p class="section-sub">Real stories from students, professors, and alumni who have transformed their campus experience with CampusBridge.</p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card reveal reveal-delay-1">
+          <span class="quote-mark">"</span>
+          <p>CampusBridge completely changed how I study. The AI quiz generator helped me crack my DSA finals with targeted practice — I went from average to top 3 in my batch.</p>
+          <div class="testimonial-author">
+            <div class="t-avatar ta-1">P</div>
+            <div class="t-info"><h5>Priya Nair</h5><p>B.Tech CSE · 3rd Year</p></div>
+            <div class="t-stars">★★★★★</div>
+          </div>
+        </div>
+        <div class="testimonial-card reveal reveal-delay-2">
+          <span class="quote-mark">"</span>
+          <p>The analytics dashboard is a game changer. I can see which students are struggling before they fall behind — and the notice board saves me hours of email every week.</p>
+          <div class="testimonial-author">
+            <div class="t-avatar ta-2">D</div>
+            <div class="t-info"><h5>Dr. Anil Sharma</h5><p>Associate Professor · CS Dept</p></div>
+            <div class="t-stars">★★★★★</div>
+          </div>
+        </div>
+        <div class="testimonial-card reveal reveal-delay-3">
+          <span class="quote-mark">"</span>
+          <p>I was able to refer 3 of my juniors to my company through CampusBridge's job board. Mentoring sessions are smooth and it keeps me genuinely connected to my alma mater.</p>
+          <div class="testimonial-author">
+            <div class="t-avatar ta-3">S</div>
+            <div class="t-info"><h5>Sneha Kulkarni</h5><p>Product Manager · Flipkart · Alumni</p></div>
+            <div class="t-stars">★★★★★</div>
+          </div>
+        </div>
+        <div class="testimonial-card reveal reveal-delay-1">
+          <span class="quote-mark">"</span>
+          <p>The study group rooms and real-time collaboration tools are incredible. We shipped our semester project entirely through CampusBridge — no other tools needed.</p>
+          <div class="testimonial-author">
+            <div class="t-avatar ta-4">A</div>
+            <div class="t-info"><h5>Arjun Reddy</h5><p>M.Tech · Data Science</p></div>
+            <div class="t-stars">★★★★★</div>
+          </div>
+        </div>
+        <div class="testimonial-card reveal reveal-delay-2">
+          <span class="quote-mark">"</span>
+          <p>The leaderboard feature created healthy competition in my classroom. Students are more engaged than ever, and the badge system keeps motivation consistently high.</p>
+          <div class="testimonial-author">
+            <div class="t-avatar ta-5">M</div>
+            <div class="t-info"><h5>Dr. Maya Patel</h5><p>Professor · Mathematics Dept</p></div>
+            <div class="t-stars">★★★★★</div>
+          </div>
+        </div>
+        <div class="testimonial-card reveal reveal-delay-3">
+          <span class="quote-mark">"</span>
+          <p>Finding a mentor used to feel impossible. Through CampusBridge I connected with an alum at Microsoft who actually guided me through my placements. Life-changing.</p>
+          <div class="testimonial-author">
+            <div class="t-avatar ta-6">K</div>
+            <div class="t-info"><h5>Karan Mehta</h5><p>Final Year · ECE</p></div>
+            <div class="t-stars">★★★★★</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section id="stats">
+    <div class="section-inner">
+      <div class="stats-grid">
+        <div class="stat-box reveal reveal-delay-1"><div class="stat-box-val">17K+</div><div class="stat-box-lbl">Campus Members</div><div class="stat-box-sub">Across all roles</div></div>
+        <div class="stat-box reveal reveal-delay-2"><div class="stat-box-val">98%</div><div class="stat-box-lbl">Satisfaction Rate</div><div class="stat-box-sub">Based on user surveys</div></div>
+        <div class="stat-box reveal reveal-delay-3"><div class="stat-box-val">200+</div><div class="stat-box-lbl">Courses Hosted</div><div class="stat-box-sub">Actively updated</div></div>
+        <div class="stat-box reveal reveal-delay-4"><div class="stat-box-val">3x</div><div class="stat-box-lbl">Faster Connections</div><div class="stat-box-sub">Students to Mentors</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="cta">
+    <div class="section-inner">
+      <div class="cta-box reveal">
+        <h2>Ready to bridge your<br/>campus future?</h2>
+        <p>Join thousands of students, professors, and alumni already transforming their campus experience. It's free to start.</p>
+        <div class="cta-actions">
+          <a href="index.html" class="btn-hero-primary" id="cta-primary-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Get Started — It's Free
+          </a>
+          <a href="#features" class="btn-hero-secondary" id="cta-learn-btn">Learn More</a>
+        </div>
+        <div class="cta-secure">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          256-bit encrypted &middot; No credit card required &middot; Free forever plan
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <a href="home.html" class="footer-logo">
+        <div class="footer-logo-mark">CB</div>
+        <span class="footer-logo-text">CampusBridge</span>
+      </a>
+      <span class="footer-copy">&copy; 2026 CampusBridge. All rights reserved.</span>
+      <div class="footer-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Contact</a>
+        <a href="index.html">Sign In</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* Particle Canvas */
+    (function() {
+      const canvas = document.getElementById('canvas-bg');
+      const ctx = canvas.getContext('2d');
+      let W, H, particles = [], mouse = { x: -999, y: -999 };
+      const N = 70;
+      const COLORS = ['rgba(245,158,11,', 'rgba(20,184,166,', 'rgba(251,113,133,', 'rgba(251,191,36,'];
+
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+
+      function randomParticle() {
+        return {
+          x: Math.random() * W, y: Math.random() * H,
+          r: Math.random() * 1.6 + 0.3,
+          vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3,
+          alpha: Math.random() * 0.45 + 0.08,
+          color: COLORS[Math.floor(Math.random() * COLORS.length)],
+          pulse: Math.random() * Math.PI * 2,
+        };
+      }
+
+      function init() { resize(); particles = Array.from({ length: N }, randomParticle); }
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < 120) {
+              ctx.beginPath();
+              ctx.strokeStyle = 'rgba(245,158,11,' + (0.06 * (1 - dist/120)) + ')';
+              ctx.lineWidth = 0.5;
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.stroke();
+            }
+          }
+        }
+        particles.forEach(p => {
+          p.pulse += 0.018;
+          const pa = p.alpha + Math.sin(p.pulse) * 0.08;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = p.color + Math.min(1, Math.max(0, pa)) + ')';
+          ctx.fill();
+          p.x += p.vx; p.y += p.vy;
+          const mdx = p.x - mouse.x, mdy = p.y - mouse.y;
+          const md = Math.sqrt(mdx*mdx + mdy*mdy);
+          if (md < 90) { p.x += (mdx/md) * 0.6; p.y += (mdy/md) * 0.6; }
+          if (p.x < -10) p.x = W+10; if (p.x > W+10) p.x = -10;
+          if (p.y < -10) p.y = H+10; if (p.y > H+10) p.y = -10;
+        });
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', resize);
+      window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+      init(); draw();
+    })();
+
+    /* Navbar scroll */
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 20);
+    });
+
+    /* Scroll reveal */
+    const revealEls = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    revealEls.forEach(el => observer.observe(el));
+
+    /* Role Tabs */
+    function switchRole(role) {
+      ['student','professor','alumni'].forEach(r => {
+        document.getElementById('tab-' + r).classList.toggle('active', r === role);
+        document.getElementById('panel-' + r).classList.toggle('active', r === role);
+      });
+    }
+
+    /* Feature card mouse glow */
+    document.querySelectorAll('.feature-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mouse-x', ((e.clientX - rect.left) / rect.width * 100) + '%');
+        card.style.setProperty('--mouse-y', ((e.clientY - rect.top) / rect.height * 100) + '%');
+      });
+    });
+  </script>
+</body>
+</html>

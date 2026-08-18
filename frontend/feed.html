@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Feed — CampusBridge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0e1a;--surface:rgba(12,17,30,0.8);--border:rgba(245,158,11,0.12);--primary:#f59e0b;--text:#f1f5f9;--muted:#a1a1aa;--dim:#57534e}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:rgba(245,158,11,0.3);border-radius:3px}
+    .blob{position:fixed;pointer-events:none;z-index:0}
+    .blob-1{width:600px;height:600px;background:radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);top:-200px;left:-200px}
+    .blob-2{width:400px;height:400px;background:rgba(168,85,247,0.08);bottom:-100px;right:-100px}
+    .page-wrap{position:relative;z-index:1;max-width:800px;margin:0 auto;padding:1.5rem}
+
+    /* Create post */
+    .create-post{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:1.25rem;margin-bottom:1.5rem;}
+    .create-top{display:flex;align-items:flex-start;gap:0.85rem;margin-bottom:0.85rem}
+    .create-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid rgba(245,158,11,0.2)}
+    .create-textarea{width:100%;background:rgba(15,20,35,0.8);border:1px solid rgba(245,158,11,0.1);border-radius:12px;padding:0.75rem 1rem;color:var(--text);font-family:'Inter',sans-serif;font-size:0.9rem;resize:none;outline:none;min-height:80px;transition:border-color 0.2s}
+    .create-textarea:focus{border-color:#f59e0b}
+    .create-textarea::placeholder{color:var(--dim)}
+    .create-actions{display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap}
+    .img-label{display:inline-flex;align-items:center;gap:0.4rem;padding:0.45rem 1rem;border-radius:10px;border:1px solid rgba(245,158,11,0.18);color:var(--muted);font-size:0.82rem;cursor:pointer;transition:all 0.2s}
+    .img-label:hover{color:#fff;border-color:rgba(245,158,11,0.35)}
+    #post-img-input{display:none}
+    #img-preview{max-height:180px;border-radius:12px;object-fit:cover;width:100%;margin-top:0.75rem;display:none}
+  </style>
+</head>
+<body>
+<div class="blob blob-1"></div><div class="blob blob-2"></div>
+<script src="js/auth.js"></script>
+<script>renderNav('feed');</script>
+
+<div class="page-wrap">
+  <div class="page-header"><h1>Social Feed</h1><p>Share updates with your campus community</p></div>
+
+  <!-- Create Post -->
+  <div class="create-post">
+    <div class="create-top">
+      <img id="my-avatar" src="" class="create-avatar" alt=""/>
+      <textarea id="post-body" class="create-textarea" placeholder="What's on your mind? Share with your campus..."></textarea>
+    </div>
+    <img id="img-preview" alt=""/>
+    <div class="create-actions">
+      <label for="post-img-input" class="img-label">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Photo
+      </label>
+      <input type="file" id="post-img-input" accept="image/*"/>
+      <button class="cb-btn cb-btn-primary cb-btn-sm" id="post-submit-btn" style="margin-left:auto">Post</button>
+    </div>
+  </div>
+
+  <!-- Feed -->
+  <div id="feed-container">
+    <div style="text-align:center;padding:3rem"><span class="spinner"></span></div>
+  </div>
+  <div id="load-more-wrap" style="text-align:center;padding:1rem;display:none">
+    <button class="cb-btn cb-btn-secondary" id="load-more-btn">Load More</button>
+  </div>
+</div>
+
+<script>
+const myUser = getUser();
+let page = 1;
+
+document.getElementById('my-avatar').src = avatarUrl(myUser?.avatar);
+
+// Image preview
+document.getElementById('post-img-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const prev = document.getElementById('img-preview');
+  prev.src = URL.createObjectURL(file);
+  prev.style.display = 'block';
+});
+
+// Submit post
+document.getElementById('post-submit-btn').addEventListener('click', async () => {
+  const body = document.getElementById('post-body').value.trim();
+  const file = document.getElementById('post-img-input').files[0];
+  if (!body && !file) return;
+  const btn = document.getElementById('post-submit-btn');
+  btn.textContent = 'Posting...'; btn.disabled = true;
+  const fd = new FormData();
+  if (body) fd.append('body', body);
+  if (file) fd.append('image', file);
+  try {
+    const res = await apiFetch('/posts', { method: 'POST', body: fd });
+    const post = await res.json();
+    document.getElementById('post-body').value = '';
+    document.getElementById('post-img-input').value = '';
+    const prev = document.getElementById('img-preview');
+    prev.src = ''; prev.style.display = 'none';
+    prependPost(post);
+  } catch {}
+  btn.textContent = 'Post'; btn.disabled = false;
+});
+
+// Load feed
+async function loadFeed(p = 1) {
+  try {
+    const res = await apiFetch(`/feed?page=${p}`);
+    const posts = await res.json();
+    const container = document.getElementById('feed-container');
+    if (p === 1) container.innerHTML = '';
+    if (!posts.length && p === 1) {
+      container.innerHTML = '<div class="empty-state"><p>No posts yet. Be the first to post!</p></div>';
+      return;
+    }
+    posts.forEach(post => container.appendChild(buildPostCard(post)));
+    document.getElementById('load-more-wrap').style.display = posts.length >= 20 ? '' : 'none';
+  } catch (err) { console.error(err); }
+}
+
+document.getElementById('load-more-btn').addEventListener('click', () => { page++; loadFeed(page); });
+
+function prependPost(post) {
+  const card = buildPostCard(post);
+  const container = document.getElementById('feed-container');
+  container.insertBefore(card, container.firstChild);
+}
+
+loadFeed();
+</script>
+</body>
+</html>

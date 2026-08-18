@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Analytics — CampusBridge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0e1a;--surface:rgba(12,17,30,0.8);--border:rgba(245,158,11,0.12);--text:#f1f5f9;--muted:#a1a1aa;--dim:#57534e}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    .blob{position:fixed;pointer-events:none;z-index:0}
+    .blob-1{width:500px;height:500px;background:radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);top:-100px;right:-100px}
+    .page-wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:1.5rem}
+
+    /* Stat cards */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.25rem;margin-bottom:2rem}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:1.5rem;text-align:center}
+    .stat-icon{font-size:2rem;margin-bottom:0.5rem}
+    .stat-val{font-family:'Space Grotesk',sans-serif;font-size:2.2rem;font-weight:800;background:linear-gradient(90deg,#fbbf24,#14b8a6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:0.25rem}
+    .stat-label{font-size:0.78rem;color:var(--muted);font-weight:500}
+
+    /* Table */
+    .analytics-table{background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden;}
+    .table-header-row{display:grid;grid-template-columns:1fr 80px 90px 80px;padding:0.75rem 1.25rem;background:rgba(10,14,26,0.55);border-bottom:1px solid rgba(245,158,11,0.08);font-size:0.72rem;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:0.5px}
+    .table-data-row{display:grid;grid-template-columns:1fr 80px 90px 80px;padding:0.9rem 1.25rem;border-bottom:1px solid rgba(245,158,11,0.05);align-items:center;transition:background 0.2s}
+    .table-data-row:last-child{border-bottom:none}
+    .table-data-row:hover{background:rgba(245,158,11,0.03)}
+    .course-name-cell{font-size:0.88rem;font-weight:600;color:#fff}
+    .course-sub-cell{font-size:0.73rem;color:var(--muted)}
+    .at-risk-num{color:#f87171;font-weight:700;font-size:0.88rem}
+    .avg-bar{height:6px;border-radius:3px;background:radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%);margin-top:4px;overflow:hidden}
+    .avg-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#f59e0b,#14b8a6);transition:width 0.8s ease}
+
+    .section-title{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem}
+    .section-title::before{content:'';display:block;width:3px;height:18px;background:linear-gradient(135deg,#f59e0b,#14b8a6);border-radius:2px}
+  </style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<script src="js/auth.js"></script>
+<script>
+if (getUser()?.role !== 'Professor') {
+  alert('This page is for Professors only.');
+  window.location.href = '/dashboard.html';
+}
+renderNav('');
+</script>
+
+<div class="page-wrap">
+  <div class="page-header"><h1>Analytics Dashboard</h1><p>Insights across your courses and students</p></div>
+
+  <!-- Stats -->
+  <div class="stats-grid" id="stats-grid">
+    <div style="text-align:center;padding:2rem;grid-column:1/-1"><span class="spinner"></span></div>
+  </div>
+
+  <!-- Course Breakdown -->
+  <div class="section-title" id="course-section-title" style="display:none">Course Breakdown</div>
+  <div class="analytics-table" id="course-table" style="display:none">
+    <div class="table-header-row"><span>Course</span><span>Enrolled</span><span>Avg Score</span><span>At-Risk</span></div>
+    <div id="course-rows"></div>
+  </div>
+</div>
+
+<script>
+async function loadAnalytics() {
+  try {
+    const res = await apiFetch('/analytics');
+    if (!res.ok) { document.getElementById('stats-grid').innerHTML = '<div class="alert alert-error">Failed to load analytics</div>'; return; }
+    const data = await res.json();
+    document.getElementById('stats-grid').innerHTML = `
+      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val">${data.totalStudents}</div><div class="stat-label">Total Students Enrolled</div></div>
+      <div class="stat-card"><div class="stat-icon">📚</div><div class="stat-val">${data.totalCourses}</div><div class="stat-label">Courses Created</div></div>
+      <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-val">${data.avgScore}%</div><div class="stat-label">Average Score</div></div>
+      <div class="stat-card"><div class="stat-icon">📢</div><div class="stat-val">${data.totalNotices}</div><div class="stat-label">Notices Posted</div></div>`;
+
+    if (data.courseStats?.length) {
+      document.getElementById('course-section-title').style.display = '';
+      document.getElementById('course-table').style.display = '';
+      document.getElementById('course-rows').innerHTML = data.courseStats.map(s => `
+        <div class="table-data-row">
+          <div>
+            <div class="course-name-cell">${s.course.title}</div>
+            <div class="course-sub-cell">${s.course.subject}</div>
+          </div>
+          <div style="font-size:0.88rem;font-weight:600;color:#fff">${s.enrolled}</div>
+          <div>
+            <div style="font-size:0.88rem;font-weight:600;color:#fbbf24">${s.avgScore}%</div>
+            <div class="avg-bar"><div class="avg-bar-fill" style="width:${s.avgScore}%"></div></div>
+          </div>
+          <div class="${s.atRisk>0?'at-risk-num':''}">
+            ${s.atRisk > 0 ? `⚠️ ${s.atRisk}` : '✓ 0'}
+          </div>
+        </div>`).join('');
+    }
+  } catch (err) { console.error(err); }
+}
+
+loadAnalytics();
+</script>
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Messages — CampusBridge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0e1a;--surface:rgba(12,17,30,0.8);--border:rgba(245,158,11,0.12);--text:#f1f5f9;--muted:#a1a1aa;--dim:#57534e}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:rgba(245,158,11,0.3);border-radius:3px}
+
+    .dm-layout{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 64px);max-width:1200px;margin:0 auto;width:100%;gap:0;padding:1rem;gap:1rem}
+
+    /* Sidebar */
+    .dm-sidebar{background:var(--surface);border:1px solid var(--border);border-radius:20px;display:flex;flex-direction:column;overflow:hidden}
+    .sidebar-header{padding:1rem 1.25rem;border-bottom:1px solid rgba(245,158,11,0.08)}
+    .sidebar-header h2{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;color:#fff;margin-bottom:0.75rem}
+    .sidebar-search{display:flex;align-items:center;gap:0.5rem;background:rgba(15,20,35,0.8);border:1px solid rgba(245,158,11,0.1);border-radius:10px;padding:0.5rem 0.8rem}
+    .sidebar-search svg{color:var(--dim);flex-shrink:0}
+    .sidebar-search input{background:none;border:none;outline:none;color:var(--text);font-size:0.82rem;font-family:'Inter',sans-serif;width:100%}
+    .sidebar-search input::placeholder{color:var(--dim)}
+    .convs-list{flex:1;overflow-y:auto;padding:0.5rem}
+    .conv-item{display:flex;align-items:center;gap:0.75rem;padding:0.75rem 0.75rem;border-radius:12px;cursor:pointer;transition:background 0.2s;position:relative}
+    .conv-item:hover,.conv-item.active{background:radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%)}
+    .conv-item.active{background:radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%)}
+    .conv-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid rgba(245,158,11,0.18)}
+    .conv-info{flex:1;min-width:0}
+    .conv-name{font-size:0.88rem;font-weight:600;color:#fff}
+    .conv-last{font-size:0.74rem;color:var(--muted);margin-top:0.1rem;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .conv-unread{width:18px;height:18px;border-radius:50%;background:#f59e0b;color:#fff;font-size:0.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+    /* New DM search results */
+    .new-dm-results{padding:0.5rem}
+    .new-dm-item{display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0.75rem;border-radius:10px;cursor:pointer;transition:background 0.2s}
+    .new-dm-item:hover{background:radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%)}
+    .new-dm-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid rgba(245,158,11,0.18)}
+
+    /* Chat Panel */
+    .dm-panel{background:var(--surface);border:1px solid var(--border);border-radius:20px;display:flex;flex-direction:column;overflow:hidden}
+    .chat-header{padding:1rem 1.25rem;border-bottom:1px solid rgba(245,158,11,0.08);display:flex;align-items:center;gap:0.75rem}
+    .chat-header-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid rgba(245,158,11,0.2)}
+    .chat-header-info{flex:1}
+    .chat-header-name{font-size:0.95rem;font-weight:700;color:#fff}
+    .chat-header-role{font-size:0.72rem;color:var(--muted)}
+    .chat-header-actions{display:flex;gap:0.5rem}
+
+    .chat-messages{flex:1;overflow-y:auto;padding:1rem 1.25rem;display:flex;flex-direction:column;gap:0.75rem}
+    .chat-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--dim);text-align:center;gap:0.5rem}
+    .chat-empty svg{width:48px;height:48px;opacity:0.3}
+
+    .msg{display:flex;gap:0.6rem;align-items:flex-end;max-width:75%}
+    .msg.mine{flex-direction:row-reverse;margin-left:auto}
+    .msg-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid rgba(245,158,11,0.18)}
+    .msg-bubble{padding:0.6rem 0.9rem;border-radius:18px;font-size:0.85rem;line-height:1.5;word-break:break-word}
+    .msg.theirs .msg-bubble{background:rgba(15,20,35,0.9);border:1px solid rgba(245,158,11,0.1);color:var(--text);border-bottom-left-radius:4px}
+    .msg.mine .msg-bubble{background:linear-gradient(135deg,#d97706,#f59e0b);color:#fff;border-bottom-right-radius:4px}
+    .msg-time{font-size:0.65rem;color:var(--dim);margin-top:0.2rem;text-align:right}
+    .msg.theirs .msg-time{text-align:left}
+
+    .chat-input-bar{padding:1rem 1.25rem;border-top:1px solid rgba(245,158,11,0.08);display:flex;gap:0.75rem;align-items:flex-end;position:relative}
+    .chat-input{flex:1;background:rgba(15,20,35,0.8);border:1px solid rgba(245,158,11,0.12);border-radius:12px;padding:0.65rem 1rem;color:var(--text);font-family:'Inter',sans-serif;font-size:0.87rem;outline:none;resize:none;max-height:120px;min-height:42px;transition:border-color 0.2s}
+    .chat-input:focus{border-color:#f59e0b}
+    .chat-input::placeholder{color:var(--dim)}
+    
+    .emoji-btn{background:none;border:none;color:#94a3b8;cursor:pointer;padding:0.4rem;border-radius:50%;transition:all 0.2s;display:flex;align-items:center;justify-content:center}
+    .emoji-btn:hover{color:#f59e0b;background:rgba(245,158,11,0.1)}
+    emoji-picker { --background: #0c111e; --border-color: rgba(245,158,11,0.2); --indicator-color: #f59e0b; --input-border-color: rgba(245,158,11,0.3); --num-columns: 8; --emoji-size: 1.5rem; height: 350px; }
+
+    .no-chat-selected{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:1rem;color:var(--dim);text-align:center}
+    .no-chat-selected svg{width:64px;height:64px;opacity:0.2}
+    .no-chat-selected h3{color:#64748b;font-family:'Space Grotesk',sans-serif}
+
+    @media(max-width:700px){.dm-layout{grid-template-columns:1fr}.dm-sidebar{display:none}.dm-sidebar.show{display:flex}}
+  </style>
+</head>
+<body>
+<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
+<script src="js/auth.js"></script>
+<script>renderNav('dm');</script>
+
+<div class="dm-layout">
+  <!-- Sidebar -->
+  <div class="dm-sidebar">
+    <div class="sidebar-header">
+      <h2>Messages</h2>
+      <div class="sidebar-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="dm-search" placeholder="Find or start a conversation..." autocomplete="off"/>
+      </div>
+    </div>
+    <div class="convs-list" id="convs-list">
+      <div style="text-align:center;padding:2rem"><span class="spinner"></span></div>
+    </div>
+  </div>
+
+  <!-- Chat Panel -->
+  <div class="dm-panel" id="dm-panel">
+    <div class="no-chat-selected">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <h3>Select a conversation</h3>
+      <p>Search for someone to start messaging</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const myUser = getUser();
+let activeUserId = null;
+let pollTimer = null;
+let searchTimer = null;
+let allUsers = [];
+
+// Load all users for search
+async function loadAllUsers() {
+  try {
+    const res = await apiFetch('/users');
+    allUsers = await res.json();
+  } catch {}
+}
+
+async function loadConversations() {
+  try {
+    const res = await apiFetch('/dm/conversations');
+    const convs = await res.json();
+    const el = document.getElementById('convs-list');
+    if (!convs.length) {
+      el.innerHTML = '<p style="color:var(--dim);font-size:0.82rem;text-align:center;padding:1.5rem">No conversations yet.<br/>Search for someone to message.</p>';
+      return;
+    }
+    el.innerHTML = convs.map(c => `
+      <div class="conv-item ${c.user._id===activeUserId?'active':''}" onclick="openChat('${c.user._id}','${c.user.fullName}','${c.user.role}','${c.user.avatar||''}')">
+        <img src="${avatarUrl(c.user.avatar)}" class="conv-avatar"/>
+        <div class="conv-info">
+          <div class="conv-name">${c.user.fullName}</div>
+          <div class="conv-last">${c.lastMessage?.text?.substring(0,40)||'No messages'}</div>
+        </div>
+        ${c.unread>0?`<div class="conv-unread">${c.unread}</div>`:''}
+      </div>`).join('');
+  } catch {}
+}
+
+// Search
+document.getElementById('dm-search').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim().toLowerCase();
+  if (!q) { loadConversations(); return; }
+  searchTimer = setTimeout(() => {
+    const filtered = allUsers.filter(u => u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+    const el = document.getElementById('convs-list');
+    el.innerHTML = filtered.slice(0,10).map(u => `
+      <div class="new-dm-item" onclick="openChat('${u._id}','${u.fullName}','${u.role}','${u.avatar||''}')">
+        <img src="${avatarUrl(u.avatar)}" class="new-dm-avatar"/>
+        <div>
+          <div style="font-size:0.85rem;font-weight:600;color:#fff">${u.fullName}</div>
+          <div style="font-size:0.72rem;color:var(--muted)">${u.role}${u.department?' · '+u.department:''}</div>
+        </div>
+      </div>`).join('') || '<p style="color:var(--dim);font-size:0.82rem;text-align:center;padding:1.5rem">No users found</p>';
+  }, 300);
+});
+
+async function openChat(userId, name, role, avatar) {
+  clearInterval(pollTimer);
+  activeUserId = userId;
+  loadConversations();
+  apiFetch(`/dm/${userId}/read`, { method: 'PATCH' });
+
+  const roleColors = { Student: '#fbbf24', Professor: '#14b8a6', Alumni: '#fb7185' };
+  document.getElementById('dm-panel').innerHTML = `
+    <div class="chat-header">
+      <a href="profile.html?id=${userId}"><img src="${avatarUrl(avatar)}" class="chat-header-avatar"/></a>
+      <div class="chat-header-info">
+        <div class="chat-header-name">${name}</div>
+        <div class="chat-header-role" style="color:${roleColors[role]||'#94a3b8'}">${role}</div>
+      </div>
+      <div class="chat-header-actions">
+        <a href="profile.html?id=${userId}" class="cb-btn cb-btn-secondary cb-btn-sm">View Profile</a>
+      </div>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div style="text-align:center;padding:2rem"><span class="spinner"></span></div>
+    </div>
+    <div class="chat-input-bar">
+      <div class="chat-input-wrapper" style="position:relative;flex:1;display:flex;align-items:flex-end;">
+        <button class="emoji-btn" style="position:absolute;left:0.4rem;bottom:0.25rem;z-index:10;" onclick="toggleEmojiPicker(event)" title="Add emoji">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        </button>
+        <div id="emoji-picker-container" style="display:none;position:absolute;bottom:calc(100% + 5px);left:0;z-index:100;box-shadow:0 10px 40px rgba(0,0,0,0.5);border-radius:8px;overflow:hidden">
+          <emoji-picker class="dark"></emoji-picker>
+        </div>
+        <textarea class="chat-input" id="dm-input" style="padding-left:2.8rem;width:100%" placeholder="Message ${name}..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendDM()}"></textarea>
+      </div>
+      <button class="cb-btn cb-btn-primary" onclick="sendDM()" style="flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>`;
+
+  setTimeout(() => {
+    const picker = document.querySelector('emoji-picker');
+    if(picker) {
+      picker.addEventListener('emoji-click', event => {
+        const input = document.getElementById('dm-input');
+        input.value += event.detail.unicode;
+        input.focus();
+      });
+    }
+  }, 100);
+
+  await loadMessages(userId);
+  pollTimer = setInterval(() => loadMessages(userId, false), 2000);
+}
+
+async function loadMessages(userId, scroll = true) {
+  try {
+    const res = await apiFetch(`/dm/${userId}`);
+    const msgs = await res.json();
+    const el = document.getElementById('chat-messages');
+    if (!el) return;
+    if (!msgs.length) {
+      el.innerHTML = '<div class="chat-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>Send the first message!</p></div>';
+      return;
+    }
+    const wasAtBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 30;
+    el.innerHTML = msgs.map(m => {
+      const mine = m.sender?._id === myUser?.id || m.sender?._id === myUser?._id;
+      const diffMins = (Date.now() - new Date(m.createdAt).getTime()) / 60000;
+      const diffHours = diffMins / 60;
+      
+      let msgText = m.text;
+      let editHtml = '';
+      
+      if (m.isDeleted) {
+        msgText = '<span style="font-style:italic;opacity:0.8">🚫 This message was deleted</span>';
+      } else {
+        if (m.isEdited) editHtml += '<span style="font-style:italic;margin-left:4px;">(edited)</span>';
+        if (mine && diffMins <= 15) {
+          editHtml += ` <span style="cursor:pointer;margin-left:4px;opacity:0.7" onclick="editMessage('${m._id}', \`${m.text.replace(/`/g, '\\`').replace(/"/g, '&quot;')}\`)" title="Edit Message">✏️</span>`;
+        }
+        if (mine && diffHours <= 1) {
+          editHtml += ` <span style="cursor:pointer;margin-left:4px;opacity:0.7" onclick="deleteMessage('${m._id}')" title="Delete Message">🗑️</span>`;
+        }
+      }
+
+      return `<div class="msg ${mine?'mine':'theirs'}">
+        ${!mine ? `<img src="${avatarUrl(m.sender?.avatar)}" class="msg-avatar"/>` : ''}
+        <div><div class="msg-bubble">${msgText}</div><div class="msg-time">${timeAgo(m.createdAt)}${editHtml}</div></div>
+      </div>`;
+    }).join('');
+    if (scroll || wasAtBottom) el.scrollTop = el.scrollHeight;
+  } catch {}
+}
+
+async function sendDM() {
+  const input = document.getElementById('dm-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text || !activeUserId) return;
+  input.value = '';
+  try {
+    await apiFetch(`/dm/${activeUserId}`, { method: 'POST', body: JSON.stringify({ text }) });
+    await loadMessages(activeUserId);
+    loadConversations();
+  } catch {}
+}
+
+async function editMessage(msgId, oldText) {
+  const newText = prompt("Edit your message:", oldText);
+  if (!newText || newText === oldText) return;
+  try {
+    await apiFetch(`/dm/message/${msgId}`, { method: 'PATCH', body: JSON.stringify({ text: newText }) });
+    if(activeUserId) await loadMessages(activeUserId, false);
+  } catch (e) {
+    alert("Failed to edit message. " + (e.message || ""));
+  }
+}
+
+async function deleteMessage(msgId) {
+  if (!confirm('Are you sure you want to delete this message for everyone?')) return;
+  try {
+    await apiFetch(`/dm/message/${msgId}`, { method: 'DELETE' });
+    if (activeUserId) await loadMessages(activeUserId, false);
+  } catch (e) {
+    alert("Failed to delete message. " + (e.message || ""));
+  }
+}
+
+// Check for user param (from profile page "Send Message")
+const urlParams = new URLSearchParams(window.location.search);
+const initUser = urlParams.get('user');
+
+function toggleEmojiPicker(e) {
+  if(e) e.stopPropagation();
+  const p = document.getElementById('emoji-picker-container');
+  if(p) p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
+document.addEventListener('click', (e) => {
+  const p = document.getElementById('emoji-picker-container');
+  const btn = document.querySelector('.emoji-btn');
+  if (p && p.style.display === 'block') {
+    if (!p.contains(e.target) && (!btn || !btn.contains(e.target))) {
+      p.style.display = 'none';
+    }
+  }
+});
+
+(async () => {
+  await loadAllUsers();
+  await loadConversations();
+  if (initUser) {
+    try {
+      const res = await apiFetch(`/users/${initUser}`);
+      const u = await res.json();
+      openChat(u._id, u.fullName, u.role, u.avatar || '');
+    } catch {}
+  }
+})();
+</script>
+</body>
+</html>

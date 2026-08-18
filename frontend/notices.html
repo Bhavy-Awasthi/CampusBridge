@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Notices — CampusBridge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0e1a;--surface:rgba(12,17,30,0.8);--border:rgba(245,158,11,0.12);--text:#f1f5f9;--muted:#a1a1aa;--dim:#57534e}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    .blob{position:fixed;pointer-events:none;z-index:0}
+    .blob-1{width:500px;height:500px;background:radial-gradient(circle, rgba(251,113,133,0.12) 0%, transparent 70%);top:-150px;left:-150px}
+    .page-wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:1.5rem}
+    .notice-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:1.5rem;margin-bottom:1rem;transition:all 0.25s;position:relative;overflow:hidden}
+    .notice-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:2px 0 0 2px}
+    .notice-card.urgent::before{background:#f43f5e}
+    .notice-card.high::before{background:#f59e0b}
+    .notice-card.medium::before{background:#f59e0b}
+    .notice-card.low::before{background:#10b981}
+    .notice-card:hover{transform:translateY(-2px);border-color:rgba(245,158,11,0.25);box-shadow:0 12px 36px rgba(0,0,0,0.3)}
+    .notice-header{display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:0.75rem}
+    .notice-title{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;color:#fff;flex:1}
+    .priority-badge{padding:0.2rem 0.65rem;border-radius:999px;font-size:0.65rem;font-weight:700;flex-shrink:0}
+    .p-urgent{background:rgba(244,63,94,0.2);color:#fb7185;border:1px solid rgba(244,63,94,0.3)}
+    .p-high{background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)}
+    .p-medium{background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.2)}
+    .p-low{background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.25)}
+    .notice-body{font-size:0.88rem;color:var(--muted);line-height:1.65;margin-bottom:0.75rem}
+    .notice-footer{display:flex;align-items:center;gap:0.75rem;font-size:0.75rem;color:var(--dim)}
+    .notice-author{display:flex;align-items:center;gap:0.4rem}
+    .author-avatar{width:20px;height:20px;border-radius:50%;object-fit:cover}
+    .notice-tags{display:flex;gap:0.4rem;flex-wrap:wrap;margin-left:auto}
+    .tag{padding:0.15rem 0.55rem;background:rgba(15,20,35,0.8);border:1px solid rgba(245,158,11,0.08);border-radius:999px;font-size:0.65rem;color:var(--dim)}
+    .delete-btn{background:none;border:none;color:var(--dim);cursor:pointer;padding:0.2rem;border-radius:4px;transition:color 0.2s;flex-shrink:0}
+    .delete-btn:hover{color:#f87171}
+
+    /* Create form */
+    .create-notice{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:1.5rem;margin-bottom:1.5rem;}
+    .create-notice h3{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;color:#fff;margin-bottom:1rem}
+    .form-row{display:grid;grid-template-columns:1fr auto;gap:0.75rem}
+  </style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<script src="js/auth.js"></script>
+<script>renderNav('notices');</script>
+
+<div class="page-wrap">
+  <div class="page-header"><h1>Notice Board</h1><p>Important announcements and updates from your campus</p></div>
+
+  <!-- Create notice (Prof / Alumni only) -->
+  <div class="create-notice" id="create-notice-section" style="display:none">
+    <h3>📢 Post a Notice</h3>
+    <div class="cb-form-group"><label class="cb-label">Title</label><input id="n-title" class="cb-input" placeholder="Notice title..."/></div>
+    <div class="cb-form-group"><label class="cb-label">Message</label><textarea id="n-body" class="cb-input cb-textarea" placeholder="Write the notice content..."></textarea></div>
+    <div class="form-row">
+      <div class="cb-form-group" style="margin-bottom:0">
+        <label class="cb-label">Priority</label>
+        <select id="n-priority" class="cb-input cb-select">
+          <option value="low">🟢 Low</option>
+          <option value="medium" selected>🔵 Medium</option>
+          <option value="high">🟡 High</option>
+          <option value="urgent">🔴 Urgent</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:0px">
+        <button class="cb-btn cb-btn-primary" onclick="createNotice()">Post Notice</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter -->
+  <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;flex-wrap:wrap">
+    <button class="cb-btn cb-btn-secondary cb-btn-sm filter-btn active" data-priority="all" onclick="setFilter('all',this)">All</button>
+    <button class="cb-btn cb-btn-secondary cb-btn-sm filter-btn" data-priority="urgent" onclick="setFilter('urgent',this)" style="border-color:rgba(244,63,94,0.3);color:#fb7185">🔴 Urgent</button>
+    <button class="cb-btn cb-btn-secondary cb-btn-sm filter-btn" data-priority="high" onclick="setFilter('high',this)" style="border-color:rgba(245,158,11,0.3);color:#fbbf24">🟡 High</button>
+    <button class="cb-btn cb-btn-secondary cb-btn-sm filter-btn" data-priority="medium" onclick="setFilter('medium',this)" style="border-color:rgba(245,158,11,0.2);color:#fbbf24">🔵 Medium</button>
+    <button class="cb-btn cb-btn-secondary cb-btn-sm filter-btn" data-priority="low" onclick="setFilter('low',this)" style="border-color:rgba(16,185,129,0.3);color:#34d399">🟢 Low</button>
+  </div>
+
+  <div id="notices-list">
+    <div style="text-align:center;padding:3rem"><span class="spinner"></span></div>
+  </div>
+</div>
+
+<script>
+const myUser = getUser();
+let allNotices = [];
+let currentFilter = 'all';
+
+if (['Professor','Alumni'].includes(myUser?.role)) {
+  document.getElementById('create-notice-section').style.display = '';
+}
+
+function setFilter(priority, btn) {
+  currentFilter = priority;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNotices();
+}
+
+function renderNotices() {
+  const list = document.getElementById('notices-list');
+  const filtered = currentFilter === 'all' ? allNotices : allNotices.filter(n => n.priority === currentFilter);
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state"><p>No notices found.</p></div>';
+    return;
+  }
+  list.innerHTML = filtered.map(n => {
+    const isOwn = n.author?._id === myUser?.id || n.author?._id === myUser?._id;
+    return `<div class="notice-card ${n.priority}">
+      <div class="notice-header">
+        <div class="notice-title">${n.title}</div>
+        <span class="priority-badge p-${n.priority}">${n.priority.toUpperCase()}</span>
+        ${isOwn ? `<button class="delete-btn" onclick="deleteNotice('${n._id}',this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
+        </button>` : ''}
+      </div>
+      <div class="notice-body">${n.body}</div>
+      <div class="notice-footer">
+        <div class="notice-author">
+          <img src="${avatarUrl(n.author?.avatar)}" class="author-avatar"/>
+          <a href="profile.html?id=${n.author?._id}" style="color:inherit;text-decoration:none">${n.author?.fullName}</a>
+          ${roleBadge(n.author?.role||'Student')}
+        </div>
+        <span>${timeAgo(n.createdAt)}</span>
+        <div class="notice-tags">${(n.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadNotices() {
+  try {
+    const res = await apiFetch('/notices');
+    allNotices = await res.json();
+    // Sort: urgent first, then by date
+    const pOrder = { urgent:0, high:1, medium:2, low:3 };
+    allNotices.sort((a,b) => (pOrder[a.priority]||2) - (pOrder[b.priority]||2) || new Date(b.createdAt) - new Date(a.createdAt));
+    renderNotices();
+  } catch {}
+}
+
+async function createNotice() {
+  const title = document.getElementById('n-title').value.trim();
+  const body = document.getElementById('n-body').value.trim();
+  const priority = document.getElementById('n-priority').value;
+  if (!title || !body) { alert('Title and body required.'); return; }
+  try {
+    const res = await apiFetch('/notices', { method: 'POST', body: JSON.stringify({ title, body, priority }) });
+    if (res.ok) {
+      document.getElementById('n-title').value = '';
+      document.getElementById('n-body').value = '';
+      loadNotices();
+    }
+  } catch {}
+}
+
+async function deleteNotice(id, btn) {
+  if (!confirm('Delete this notice?')) return;
+  try {
+    await apiFetch(`/notices/${id}`, { method: 'DELETE' });
+    btn.closest('.notice-card').remove();
+    allNotices = allNotices.filter(n => n._id !== id);
+  } catch {}
+}
+
+loadNotices();
+</script>
+</body>
+</html>

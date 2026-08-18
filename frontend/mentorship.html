@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Mentorship — CampusBridge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0e1a;--surface:rgba(12,17,30,0.8);--border:rgba(245,158,11,0.12);--text:#f1f5f9;--muted:#a1a1aa;--dim:#57534e}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    .blob{position:fixed;pointer-events:none;z-index:0}
+    .blob-1{width:500px;height:500px;background:rgba(16,185,129,0.08);bottom:-100px;left:-100px}
+    .page-wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:1.5rem}
+
+    /* Tabs */
+    .page-tabs{display:flex;gap:0.5rem;margin-bottom:2rem;background:rgba(15,20,35,0.8);border-radius:12px;padding:4px;width:fit-content}
+    .page-tab{padding:0.55rem 1.25rem;border-radius:9px;border:none;background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;transition:all 0.2s}
+    .page-tab.active{background:#f59e0b;color:#fff}
+
+    /* Mentor cards */
+    .mentors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem}
+    .mentor-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:1.5rem;transition:all 0.25s}
+    .mentor-card:hover{transform:translateY(-3px);border-color:rgba(245,158,11,0.3);box-shadow:0 16px 40px rgba(0,0,0,0.35)}
+    .mentor-header{display:flex;align-items:center;gap:1rem;margin-bottom:1rem}
+    .mentor-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid rgba(251,113,133,0.3);box-shadow:0 0 16px rgba(251,113,133,0.18)}
+    .mentor-name{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;color:#fff}
+    .mentor-company{font-size:0.78rem;color:var(--muted);margin-top:0.2rem}
+    .mentor-bio{font-size:0.82rem;color:var(--muted);line-height:1.5;margin-bottom:1rem;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    .mentor-skills{display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:1rem}
+    .mentor-skill{padding:0.2rem 0.65rem;background:radial-gradient(circle, rgba(251,113,133,0.12) 0%, transparent 70%);border:1px solid rgba(251,113,133,0.18);border-radius:999px;font-size:0.7rem;color:#fb7185}
+    .mentor-footer{display:flex;gap:0.75rem;align-items:center}
+
+    /* Sessions */
+    .session-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.25rem;margin-bottom:0.75rem;}
+    .session-header{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem}
+    .session-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(245,158,11,0.18)}
+    .session-topic{font-size:0.9rem;font-weight:600;color:#fff}
+    .session-person{font-size:0.75rem;color:var(--muted)}
+    .status-badge{padding:0.2rem 0.65rem;border-radius:999px;font-size:0.7rem;font-weight:600;margin-left:auto}
+    .status-pending{background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.25);color:#fbbf24}
+    .status-accepted{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.2);color:#34d399}
+    .status-declined{background:rgba(244,63,94,0.12);border:1px solid rgba(244,63,94,0.2);color:#fb7185}
+    .status-completed{background:radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);border:1px solid rgba(245,158,11,0.15);color:#fbbf24}
+    .session-actions{display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap}
+
+    /* Request modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2000;display:flex;align-items:center;justify-content:center;padding:1rem}
+    .modal{background:rgba(12,17,30,0.98);border:1px solid rgba(245,158,11,0.18);border-radius:24px;padding:2rem;max-width:460px;width:100%}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+    .modal-close{background:none;border:none;color:var(--muted);cursor:pointer;padding:0.25rem;border-radius:6px}
+    .modal-close:hover{color:#fff}
+  </style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<script src="js/auth.js"></script>
+<script>renderNav('mentorship');</script>
+
+<div class="page-wrap">
+  <div class="page-header"><h1>Mentorship Marketplace</h1><p>Connect students with experienced alumni mentors</p></div>
+
+  <div class="page-tabs" id="page-tabs">
+    <button class="page-tab active" onclick="showTab('mentors',this)">Browse Mentors</button>
+    <button class="page-tab" onclick="showTab('sessions',this)">My Sessions</button>
+  </div>
+
+  <!-- Mentors Tab -->
+  <div id="tab-mentors">
+    <div class="mentors-grid" id="mentors-grid">
+      <div style="text-align:center;padding:3rem;grid-column:1/-1"><span class="spinner"></span></div>
+    </div>
+  </div>
+
+  <!-- Sessions Tab -->
+  <div id="tab-sessions" style="display:none">
+    <div id="sessions-list">
+      <div style="text-align:center;padding:3rem"><span class="spinner"></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Request Session Modal -->
+<div class="modal-overlay" id="req-modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <div class="modal-header">
+      <span style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;color:#fff">Request Mentorship Session</span>
+      <button class="modal-close" onclick="document.getElementById('req-modal').style.display='none'">✕</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;padding:0.75rem;background:rgba(168,85,247,0.05);border:1px solid rgba(251,113,133,0.12);border-radius:12px">
+      <img id="req-mentor-avatar" src="" style="width:40px;height:40px;border-radius:50%;object-fit:cover"/>
+      <div><div id="req-mentor-name" style="font-weight:600;color:#fff"></div><div id="req-mentor-co" style="font-size:0.75rem;color:var(--muted)"></div></div>
+    </div>
+    <div class="cb-form-group"><label class="cb-label">Topic / What you need help with</label><textarea id="req-topic" class="cb-input cb-textarea" placeholder="e.g. Career guidance, resume review, interview prep..."></textarea></div>
+    <div class="cb-form-group"><label class="cb-label">Preferred Time (optional)</label><input id="req-time" class="cb-input" type="datetime-local"/></div>
+    <div style="display:flex;gap:0.75rem;justify-content:flex-end">
+      <button class="cb-btn cb-btn-secondary" onclick="document.getElementById('req-modal').style.display='none'">Cancel</button>
+      <button class="cb-btn cb-btn-primary" onclick="sendRequest()">Send Request</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const myUser = getUser();
+let selectedMentor = null;
+
+function showTab(name, btn) {
+  document.querySelectorAll('.page-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-mentors').style.display = name === 'mentors' ? '' : 'none';
+  document.getElementById('tab-sessions').style.display = name === 'sessions' ? '' : 'none';
+  if (name === 'sessions') loadSessions();
+}
+
+async function loadMentors() {
+  const res = await apiFetch('/mentors');
+  const mentors = await res.json();
+  const grid = document.getElementById('mentors-grid');
+  if (!mentors.length) { grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>No alumni mentors yet.</p></div>'; return; }
+  grid.innerHTML = mentors.map(m => `
+    <div class="mentor-card">
+      <div class="mentor-header">
+        <a href="profile.html?id=${m._id}"><img src="${avatarUrl(m.avatar)}" class="mentor-avatar"/></a>
+        <div>
+          <a href="profile.html?id=${m._id}" style="text-decoration:none"><div class="mentor-name">${m.fullName}</div></a>
+          <div class="mentor-company">🏢 ${m.company||'Open to opportunities'} ${m.batch?'· Class of '+m.batch:''}</div>
+        </div>
+      </div>
+      ${m.bio ? `<div class="mentor-bio">${m.bio}</div>` : ''}
+      <div class="mentor-skills">${[...(m.skills||[]),...(m.subjects||[])].slice(0,4).map(s=>`<span class="mentor-skill">${s}</span>`).join('')}</div>
+      <div class="mentor-footer">
+        ${myUser?.role === 'Student' ? `<button class="cb-btn cb-btn-primary cb-btn-sm" onclick="openRequest('${m._id}','${m.fullName}','${m.company||''}','${m.avatar||''}')">Request Session</button>` : ''}
+        <a href="dm.html?user=${m._id}" class="cb-btn cb-btn-secondary cb-btn-sm">Message</a>
+        <a href="profile.html?id=${m._id}" class="cb-btn cb-btn-secondary cb-btn-sm">Profile</a>
+      </div>
+    </div>`).join('');
+}
+
+function openRequest(mentorId, name, company, avatar) {
+  selectedMentor = mentorId;
+  document.getElementById('req-mentor-avatar').src = avatarUrl(avatar);
+  document.getElementById('req-mentor-name').textContent = name;
+  document.getElementById('req-mentor-co').textContent = company;
+  document.getElementById('req-topic').value = '';
+  document.getElementById('req-time').value = '';
+  document.getElementById('req-modal').style.display = '';
+}
+
+async function sendRequest() {
+  const topic = document.getElementById('req-topic').value.trim();
+  const scheduledAt = document.getElementById('req-time').value;
+  if (!topic) { alert('Please describe what you need help with.'); return; }
+  try {
+    const res = await apiFetch('/mentorship/request', { method: 'POST', body: JSON.stringify({ mentorId: selectedMentor, topic, scheduledAt }) });
+    if (res.ok) {
+      document.getElementById('req-modal').style.display = 'none';
+      alert('Request sent! The mentor will respond soon.');
+    }
+  } catch {}
+}
+
+async function loadSessions() {
+  const res = await apiFetch('/mentorship/sessions');
+  const sessions = await res.json();
+  const el = document.getElementById('sessions-list');
+  if (!sessions.length) { el.innerHTML = '<div class="empty-state"><p>No sessions yet.</p></div>'; return; }
+  el.innerHTML = sessions.map(s => {
+    const other = myUser?.role === 'Alumni' ? s.mentee : s.mentor;
+    const isAlumni = myUser?.role === 'Alumni';
+    let actions = '';
+    if (isAlumni && s.status === 'pending') {
+      actions = `<button class="cb-btn cb-btn-primary cb-btn-sm" onclick="updateSession('${s._id}','accepted')">Accept</button>
+                 <button class="cb-btn cb-btn-danger cb-btn-sm" onclick="updateSession('${s._id}','declined')">Decline</button>`;
+    } else if (isAlumni && s.status === 'accepted') {
+      actions = `<button class="cb-btn cb-btn-secondary cb-btn-sm" onclick="updateSession('${s._id}','completed')">Mark Complete</button>`;
+    }
+    return `<div class="session-card">
+      <div class="session-header">
+        <a href="profile.html?id=${other?._id}"><img src="${avatarUrl(other?.avatar)}" class="session-avatar"/></a>
+        <div>
+          <div class="session-topic">${s.topic}</div>
+          <div class="session-person">${isAlumni?'Mentee':'Mentor'}: <a href="profile.html?id=${other?._id}" style="color:inherit">${other?.fullName}</a>${s.scheduledAt?' · '+new Date(s.scheduledAt).toLocaleString():''}</div>
+        </div>
+        <span class="status-badge status-${s.status}">${s.status.charAt(0).toUpperCase()+s.status.slice(1)}</span>
+      </div>
+      ${s.notes ? `<div style="font-size:0.82rem;color:var(--muted);margin-bottom:0.5rem">Notes: ${s.notes}</div>` : ''}
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+        ${actions}
+        <a href="dm.html?user=${other?._id}" class="cb-btn cb-btn-secondary cb-btn-sm">Message</a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function updateSession(id, status) {
+  try {
+    await apiFetch(`/mentorship/sessions/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
+    loadSessions();
+  } catch {}
+}
+
+loadMentors();
+</script>
+</body>
+</html>

@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>AI Hub — CampusBridge</title>
+  <meta name="description"
+    content="CampusBridge AI Hub — Study Assistant, Career Advisor, Resume Analyzer and more powered by AI." />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg: #0a0e1a;
+      --surface: rgba(10, 16, 35, 0.75);
+      --border: rgba(99, 130, 255, 0.16);
+      --primary: #f59e0b;
+      --accent: #fbbf24;
+      --cyan: #14b8a6;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --dim: #475569
+    }
+
+    html {
+      scroll-behavior: smooth
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg)
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.4);
+      border-radius: 3px
+    }
+
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0
+    }
+
+    .blob-1 {
+      width: 700px;
+      height: 700px;
+      background: rgba(99, 102, 241, 0.12);
+      top: -300px;
+      left: -200px
+    }
+
+    .blob-2 {
+      width: 500px;
+      height: 500px;
+      background: rgba(34, 211, 238, 0.07);
+      bottom: -150px;
+      right: -100px
+    }
+
+    .blob-3 {
+      width: 350px;
+      height: 350px;
+      background: rgba(168, 85, 247, 0.08);
+      top: 40%;
+      left: 50%
+    }
+
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem
+    }
+
+    /* Page Header */
+    .ai-header {
+      text-align: center;
+      padding: 2.5rem 0 2rem;
+      position: relative
+    }
+
+    .ai-header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 999px;
+      padding: 0.4rem 1rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #fbbf24;
+      margin-bottom: 1.2rem;
+      animation: pulse-glow 2s ease-in-out infinite
+    }
+
+    @keyframes pulse-glow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.3)
+      }
+
+      50% {
+        box-shadow: 0 0 16px 4px rgba(99, 102, 241, 0.2)
+      }
+    }
+
+    .ai-header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 0%, #fbbf24 50%, #14b8a6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.75rem
+    }
+
+    .ai-header p {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 550px;
+      margin: 0 auto
+    }
+
+    /* AI Cards Grid */
+    .ai-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem
+    }
+
+    /* Common card */
+    .ai-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      
+      overflow: hidden;
+      transition: all 0.3s;
+      display: flex;
+      flex-direction: column
+    }
+
+    .ai-card:hover {
+      border-color: rgba(99, 130, 255, 0.35);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      transform: translateY(-3px)
+    }
+
+    .ai-card-header {
+      padding: 1.5rem 1.5rem 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      border-bottom: 1px solid rgba(99, 130, 255, 0.08)
+    }
+
+    .ai-card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0
+    }
+
+    .ai-card-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.25rem
+    }
+
+    .ai-card-desc {
+      font-size: 0.78rem;
+      color: var(--muted)
+    }
+
+    .ai-card-body {
+      padding: 1.25rem 1.5rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem
+    }
+
+    .ai-card-footer {
+      padding: 0 1.5rem 1.5rem
+    }
+
+    /* Chat */
+    .chat-msgs {
+      flex: 1;
+      max-height: 280px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      padding-bottom: 0.25rem
+    }
+
+    .chat-msg {
+      padding: 0.65rem 0.9rem;
+      border-radius: 14px;
+      font-size: 0.83rem;
+      line-height: 1.5;
+      max-width: 90%;
+      animation: fadeUp 0.25s ease
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .chat-msg.user {
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+      color: #fff;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px
+    }
+
+    .chat-msg.ai {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(99, 130, 255, 0.15);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+      color: var(--text)
+    }
+
+    .chat-msg.typing {
+      opacity: 0.7
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 0.5rem
+    }
+
+    .chat-input-row input {
+      flex: 1;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(99, 130, 255, 0.15);
+      border-radius: 10px;
+      padding: 0.55rem 0.85rem;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      outline: none;
+      transition: border-color 0.2s
+    }
+
+    .chat-input-row input:focus {
+      border-color: #f59e0b
+    }
+
+    .chat-input-row input::placeholder {
+      color: var(--dim)
+    }
+
+    .chat-send-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s
+    }
+
+    .chat-send-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5)
+    }
+
+    .quick-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem
+    }
+
+    .quick-pill {
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 999px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.73rem;
+      color: #fbbf24;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap
+    }
+
+    .quick-pill:hover {
+      background: rgba(99, 102, 241, 0.25);
+      color: #a5b4fc
+    }
+
+    /* Post Generator */
+    .post-gen-output {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(99, 130, 255, 0.12);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 80px;
+      white-space: pre-wrap;
+      flex: 1
+    }
+
+    .topic-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem
+    }
+
+    .topic-pill {
+      background: rgba(34, 211, 238, 0.08);
+      border: 1px solid rgba(34, 211, 238, 0.2);
+      border-radius: 999px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.73rem;
+      color: #14b8a6;
+      cursor: pointer;
+      transition: all 0.2s
+    }
+
+    .topic-pill:hover {
+      background: rgba(34, 211, 238, 0.18)
+    }
+
+    .topic-pill.active {
+      background: rgba(34, 211, 238, 0.25);
+      border-color: rgba(34, 211, 238, 0.5)
+    }
+
+    /* Career Advisor */
+    .career-tips {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      flex: 1
+    }
+
+    .career-tip {
+      background: rgba(15, 23, 42, 0.8);
+      border-left: 3px solid #f59e0b;
+      border-radius: 0 10px 10px 0;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.8rem;
+      color: var(--text);
+      line-height: 1.5;
+      animation: fadeUp 0.3s ease
+    }
+
+    .career-tip.green {
+      border-left-color: #22c55e
+    }
+
+    .career-tip.cyan {
+      border-left-color: #14b8a6
+    }
+
+    .career-tip.purple {
+      border-left-color: #fb7185
+    }
+
+    /* Resume Analyzer */
+    .resume-dropzone {
+      border: 2px dashed rgba(99, 130, 255, 0.25);
+      border-radius: 14px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      flex: 1
+    }
+
+    .resume-dropzone:hover,
+    .resume-dropzone.drag-over {
+      border-color: rgba(99, 130, 255, 0.55);
+      background: rgba(99, 102, 241, 0.06)
+    }
+
+    .resume-score {
+      text-align: center
+    }
+
+    .resume-score-ring {
+      width: 90px;
+      height: 90px;
+      margin: 0 auto 0.75rem;
+      position: relative
+    }
+
+    .resume-score-ring svg {
+      transform: rotate(-90deg)
+    }
+
+    .resume-score-ring .score-num {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #fbbf24, #14b8a6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
+
+    .resume-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.75rem
+    }
+
+    .resume-tag {
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600
+    }
+
+    .rt-found {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.2)
+    }
+
+    .rt-missing {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.2)
+    }
+
+    .rt-improve {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.2)
+    }
+
+    /* Smart Search */
+    .smart-search-wrap {
+      position: relative
+    }
+
+    .smart-search-wrap input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(99, 130, 255, 0.2);
+      border-radius: 12px;
+      padding: 0.75rem 2.75rem 0.75rem 1rem;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      outline: none;
+      transition: all 0.2s
+    }
+
+    .smart-search-wrap input:focus {
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12)
+    }
+
+    .smart-search-wrap .ss-icon {
+      position: absolute;
+      right: 0.8rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--dim)
+    }
+
+    .ss-results {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex: 1;
+      max-height: 180px;
+      overflow-y: auto
+    }
+
+    .ss-result-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0.9rem;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(99, 130, 255, 0.1);
+      border-radius: 12px;
+      text-decoration: none;
+      transition: all 0.2s;
+      animation: fadeUp 0.25s ease
+    }
+
+    .ss-result-item:hover {
+      background: rgba(99, 102, 241, 0.1);
+      border-color: rgba(99, 102, 241, 0.3)
+    }
+
+    .ss-result-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0
+    }
+
+    .ss-result-title {
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: #e2e8f0
+    }
+
+    .ss-result-sub {
+      font-size: 0.72rem;
+      color: var(--muted)
+    }
+
+    /* Feed Ranking */
+    .ranked-posts {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      flex: 1;
+      max-height: 240px;
+      overflow-y: auto
+    }
+
+    .ranked-post {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0.85rem;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(99, 130, 255, 0.1);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      animation: fadeUp 0.3s ease
+    }
+
+    .ranked-post:hover {
+      background: rgba(99, 102, 241, 0.1)
+    }
+
+    .ranked-score {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #fbbf24, #14b8a6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      width: 30px;
+      text-align: center;
+      flex-shrink: 0
+    }
+
+    .ranked-content {
+      flex: 1;
+      overflow: hidden
+    }
+
+    .ranked-author {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #e2e8f0
+    }
+
+    .ranked-body {
+      font-size: 0.74rem;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-top: 1px
+    }
+
+    .ranked-meta {
+      font-size: 0.68rem;
+      color: var(--dim)
+    }
+
+    /* Shared Buttons */
+    .ai-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.55rem 1.1rem;
+      border-radius: 10px;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.83rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s
+    }
+
+    .ai-btn-primary {
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35)
+    }
+
+    .ai-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.55)
+    }
+
+    .ai-btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none
+    }
+
+    .ai-btn-secondary {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(99, 130, 255, 0.2);
+      color: #94a3b8
+    }
+
+    .ai-btn-secondary:hover {
+      color: #fff;
+      border-color: rgba(99, 130, 255, 0.4)
+    }
+
+    /* Icon BGs */
+    .ic-indigo {
+      background: rgba(99, 102, 241, 0.2)
+    }
+
+    .ic-cyan {
+      background: rgba(34, 211, 238, 0.15)
+    }
+
+    .ic-purple {
+      background: rgba(168, 85, 247, 0.15)
+    }
+
+    .ic-green {
+      background: rgba(16, 185, 129, 0.15)
+    }
+
+    .ic-yellow {
+      background: rgba(245, 158, 11, 0.15)
+    }
+
+    .ic-pink {
+      background: rgba(244, 63, 94, 0.15)
+    }
+
+    /* Light mode compatibility */
+    html.light-mode .ai-card {
+      background: #fff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07)
+    }
+
+    html.light-mode .ai-header h1 {
+      background: linear-gradient(135deg, #0a0e1a 0%, #d97706 50%, #0d9488 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
+
+    html.light-mode .chat-msg.ai,
+    html.light-mode .post-gen-output,
+    html.light-mode .chat-input-row input,
+    html.light-mode .smart-search-wrap input,
+    html.light-mode .ranked-post,
+    html.light-mode .career-tip,
+    html.light-mode .ss-result-item {
+      background: #f1f5f9
+    }
+
+    html.light-mode .chat-input-row input::placeholder,
+    html.light-mode .smart-search-wrap input::placeholder {
+      color: #94a3b8
+    }
+
+    html.light-mode .chat-input-row input,
+    html.light-mode .smart-search-wrap input {
+      color: #0f172a
+    }
+
+    html.light-mode .ss-result-title,
+    html.light-mode .ranked-author {
+      color: #0f172a
+    }
+
+    html.light-mode .resume-dropzone {
+      border-color: rgba(99, 102, 241, 0.3)
+    }
+
+    html.light-mode .ai-btn-secondary {
+      background: #f1f5f9;
+      color: #475569
+    }
+  </style>
+</head>
+
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <script src="js/auth.js"></script>
+  <script>renderNav('ai');</script>
+
+  <div class="page-wrap">
+    <div class="ai-header">
+      <div class="ai-header-badge">✨ Powered by AI</div>
+      <h1>CampusBridge AI Hub</h1>
+      <p>Your personal academic assistant — study smarter, create faster, grow further.</p>
+    </div>
+
+    <div class="ai-grid">
+
+      <!-- 1. AI Study Assistant -->
+      <div class="ai-card" style="grid-column: span 2;">
+        <div class="ai-card-header">
+          <div class="ai-card-icon ic-indigo">🤖</div>
+          <div>
+            <div class="ai-card-title">AI Study Assistant</div>
+            <div class="ai-card-desc">Ask academic questions, get explanations, solve problems — 24/7</div>
+          </div>
+        </div>
+        <div class="ai-card-body">
+          <div class="quick-pills" id="study-quick-pills">
+            <span class="quick-pill" onclick="sendStudyMsg(this.textContent)">Explain recursion</span>
+            <span class="quick-pill" onclick="sendStudyMsg(this.textContent)">What is photosynthesis?</span>
+            <span class="quick-pill" onclick="sendStudyMsg(this.textContent)">Solve quadratic equations</span>
+            <span class="quick-pill" onclick="sendStudyMsg(this.textContent)">Summarize Newton's laws</span>
+            <span class="quick-pill" onclick="sendStudyMsg(this.textContent)">Explain machine learning</span>
+            <span class="quick-pill" onclick="sendStudyMsg(this.textContent)">What is Big O notation?</span>
+          </div>
+          <div class="chat-msgs" id="study-chat">
+            <div class="chat-msg ai">👋 Hi! I'm your AI Study Assistant. Ask me anything academic — concepts, problems,
+              explanations, or summaries. I'm here to help!</div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" id="study-input" placeholder="Ask a question..."
+              onkeydown="if(event.key==='Enter')sendStudyMsg()" />
+            <button class="chat-send-btn" onclick="sendStudyMsg()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. AI Post Generator -->
+      <div class="ai-card">
+        <div class="ai-card-header">
+          <div class="ai-card-icon ic-cyan">✍️</div>
+          <div>
+            <div class="ai-card-title">AI Post Generator</div>
+            <div class="ai-card-desc">Generate engaging social posts in one click</div>
+          </div>
+        </div>
+        <div class="ai-card-body">
+          <div class="topic-pills" id="topic-pills">
+            <span class="topic-pill active" data-topic="study-tips" onclick="selectTopic(this)">Study Tips</span>
+            <span class="topic-pill" data-topic="motivation" onclick="selectTopic(this)">Motivation</span>
+            <span class="topic-pill" data-topic="tech" onclick="selectTopic(this)">Tech Update</span>
+            <span class="topic-pill" data-topic="achievement" onclick="selectTopic(this)">Achievement</span>
+            <span class="topic-pill" data-topic="campus-life" onclick="selectTopic(this)">Campus Life</span>
+            <span class="topic-pill" data-topic="career" onclick="selectTopic(this)">Career</span>
+          </div>
+          <div class="post-gen-output" id="post-gen-output">Click "Generate" to create an AI-crafted post for your
+            feed...</div>
+        </div>
+        <div class="ai-card-footer" style="display:flex;gap:0.5rem">
+          <button class="ai-btn ai-btn-primary" id="gen-btn" onclick="generatePost()">✨ Generate</button>
+          <button class="ai-btn ai-btn-secondary" onclick="postToFeed()">📤 Post to Feed</button>
+        </div>
+      </div>
+
+      <!-- 3. AI Career Advisor -->
+      <div class="ai-card">
+        <div class="ai-card-header">
+          <div class="ai-card-icon ic-purple">🎯</div>
+          <div>
+            <div class="ai-card-title">AI Career Advisor</div>
+            <div class="ai-card-desc">Personalised career guidance based on your profile</div>
+          </div>
+        </div>
+        <div class="ai-card-body">
+          <div class="career-tips" id="career-tips">
+            <div style="color:var(--muted);font-size:0.83rem;text-align:center;padding:1rem">Loading your career
+              insights...</div>
+          </div>
+        </div>
+        <div class="ai-card-footer">
+          <button class="ai-btn ai-btn-secondary" style="width:100%" onclick="refreshCareerTips()">🔄 Refresh
+            Insights</button>
+        </div>
+      </div>
+
+      <!-- 4. AI Smart Search -->
+      <div class="ai-card">
+        <div class="ai-card-header">
+          <div class="ai-card-icon ic-green">🔍</div>
+          <div>
+            <div class="ai-card-title">AI Smart Search</div>
+            <div class="ai-card-desc">Search people, courses, and content in natural language</div>
+          </div>
+        </div>
+        <div class="ai-card-body">
+          <div class="smart-search-wrap">
+            <input type="text" id="smart-search-input"
+              placeholder="e.g. 'show me CS professors' or 'find alumni at Google'..." oninput="smartSearch(this.value)"
+              autocomplete="off" />
+            <div class="ss-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+            </div>
+          </div>
+          <div class="ss-results" id="ss-results">
+            <div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:0.5rem">Try a natural language
+              query above...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Smart Feed Ranking -->
+      <div class="ai-card">
+        <div class="ai-card-header">
+          <div class="ai-card-icon ic-yellow">⚡</div>
+          <div>
+            <div class="ai-card-title">Smart Feed Ranking</div>
+            <div class="ai-card-desc">AI sorts your feed by predicted relevance & engagement</div>
+          </div>
+        </div>
+        <div class="ai-card-body">
+          <div class="ranked-posts" id="ranked-posts">
+            <div class="spinner" style="margin:1rem auto;display:block"></div>
+          </div>
+        </div>
+        <div class="ai-card-footer">
+          <a href="feed.html?ranked=1" class="ai-btn ai-btn-primary" style="width:100%;text-decoration:none">📊 Open
+            Ranked Feed</a>
+        </div>
+      </div>
+
+      <!-- 6. AI Resume Analyzer -->
+      <div class="ai-card" style="grid-column: span 2;">
+        <div class="ai-card-header">
+          <div class="ai-card-icon ic-pink">📄</div>
+          <div>
+            <div class="ai-card-title">AI Resume Analyzer</div>
+            <div class="ai-card-desc">Upload your resume as plain text and get instant keyword analysis and improvement
+              tips</div>
+          </div>
+        </div>
+        <div class="ai-card-body" style="flex-direction:row;gap:1.5rem;flex-wrap:wrap">
+          <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:0.85rem">
+            <textarea id="resume-text" rows="7" placeholder="Paste your resume text here..."
+              style="width:100%;background:var(--bg);border:1px solid rgba(245,158,11,0.12);border-radius:12px;padding:0.85rem;color:var(--text);font-family:'Inter',sans-serif;font-size:0.82rem;outline:none;resize:vertical;line-height:1.6"></textarea>
+            <button class="ai-btn ai-btn-primary" onclick="analyzeResume()">🔍 Analyze Resume</button>
+          </div>
+          <div style="flex:1;min-width:240px" id="resume-result">
+            <div style="color:var(--muted);font-size:0.83rem;text-align:center;padding:1.5rem">Paste your resume text on
+              the left and click Analyze to get your score and recommendations.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // API key is now securely stored in backend/.env — no key needed here!
+
+    async function callGemini(prompt) {
+      const res = await apiFetch('/ai/chat', {
+        method: 'POST',
+        body: JSON.stringify({ prompt })
+      });
+      if (!res || !res.ok) {
+        const err = await res?.json().catch(() => ({}));
+        throw new Error(err.message || 'AI request failed');
+      }
+      const data = await res.json();
+      return data.text || 'No response.';
+    }
+
+    /* ════════════════════════════════════════
+       AI Study Assistant
+    ════════════════════════════════════════ */
+    const studyKB = {
+      recursion: "Recursion is a technique where a function calls itself to solve smaller versions of the same problem. It needs a **base case** (stopping condition) and a **recursive case**. Example: factorial(n) = n * factorial(n-1), with factorial(0) = 1 as the base case.",
+      photosynthesis: "Photosynthesis is the process plants use to convert sunlight, water, and CO₂ into glucose and oxygen. The equation is: 6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂. It occurs in two stages: the light-dependent reactions (in the thylakoid) and the Calvin cycle (in the stroma).",
+      quadratic: "A quadratic equation has the form ax² + bx + c = 0. Solve it using the **quadratic formula**: x = (-b ± √(b²-4ac)) / 2a. The **discriminant** (b²-4ac) tells you: >0 means two real roots, =0 means one root, <0 means complex roots.",
+      newton: "Newton's Three Laws of Motion: 1. **Inertia** — An object at rest stays at rest unless acted upon by a force. 2. **F = ma** — Force equals mass times acceleration. 3. **Action-Reaction** — Every action has an equal and opposite reaction.",
+      "machine learning": "Machine Learning is a subset of AI where computers learn patterns from data without being explicitly programmed. Types: **Supervised** (labeled data), **Unsupervised** (finding hidden patterns), **Reinforcement** (learning via rewards). Common algorithms: Linear Regression, Decision Trees, Neural Networks.",
+      "big o": "Big O Notation describes how an algorithm's time or space grows as input increases. Common complexities: O(1) constant, O(log n) logarithmic, O(n) linear, O(n log n) linearithmic, O(n²) quadratic. Always aim for the most efficient algorithm possible.",
+      oop: "Object-Oriented Programming organizes code into **classes** and **objects**. The four pillars are: 1. **Encapsulation** (hiding internals), 2. **Abstraction** (showing only essentials), 3. **Inheritance** (child classes extend parents), 4. **Polymorphism** (same interface, different behavior).",
+      database: "A database is an organized collection of data. Relational databases (like MySQL, PostgreSQL) use tables with rows and columns. NoSQL databases (like MongoDB) use documents. Key concepts: Primary keys, Foreign keys, Indexes, ACID transactions, Normalization.",
+      sorting: "Common sorting algorithms: **Bubble Sort** O(n²), **Selection Sort** O(n²), **Insertion Sort** O(n²) (good for nearly sorted data), **Merge Sort** O(n log n), **Quick Sort** O(n log n) average, **Heap Sort** O(n log n). For most practical cases, Quick Sort or Merge Sort is preferred.",
+      networking: "Computer Networking basics: The **OSI model** has 7 layers (Physical, Data Link, Network, Transport, Session, Presentation, Application). TCP/IP is the internet's foundation. HTTP/HTTPS is used for web communication. DNS resolves domain names to IP addresses.",
+      default: [
+        "That's an interesting question! In computer science, we approach this by breaking the problem into smaller sub-problems. Can you clarify which aspect you'd like me to explain in more detail?",
+        "Great question! This topic is fundamental in academics. The core concept here involves understanding the underlying principles — would you like a step-by-step explanation or a quick summary?",
+        "I can help with that! This is a topic that spans multiple disciplines. Let me give you a concise explanation: the key insight is that all complex systems can be understood by examining their fundamental components and how they interact.",
+        "Excellent! That's a topic I can help with. The most important thing to understand here is how the core principles apply in practice. Think of it as building blocks — each concept builds on the previous one.",
+      ]
+    };
+
+    function findAnswer(q) {
+      const lower = q.toLowerCase();
+      for (const key of Object.keys(studyKB)) {
+        if (key !== 'default' && lower.includes(key)) return studyKB[key];
+      }
+      return studyKB.default[Math.floor(Math.random() * studyKB.default.length)];
+    }
+
+    async function sendStudyMsg(text) {
+      const input = document.getElementById('study-input');
+      const msg = text || input.value.trim();
+      if (!msg) return;
+      if (!text) input.value = '';
+
+      const chat = document.getElementById('study-chat');
+
+      const userDiv = document.createElement('div');
+      userDiv.className = 'chat-msg user';
+      userDiv.textContent = msg;
+      chat.appendChild(userDiv);
+
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'chat-msg ai typing';
+      typingDiv.innerHTML = '🤔 Thinking...';
+      chat.appendChild(typingDiv);
+      chat.scrollTop = chat.scrollHeight;
+
+      try {
+        const prompt = `You are an AI Study Assistant for university students. Answer this question clearly and concisely (3-5 sentences max). Use simple language. Question: ${msg}`;
+        const answer = await callGemini(prompt);
+        typingDiv.textContent = '🤖 ' + answer;
+      } catch (err) {
+        typingDiv.textContent = '❌ Error: ' + err.message;
+      }
+
+      typingDiv.classList.remove('typing');
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    /* ════════════════════════════════════════
+       AI Post Generator
+    ════════════════════════════════════════ */
+    let activeTopic = 'study-tips';
+    const postTemplates = {
+      'study-tips': [
+        "📚 Study tip that actually works: the Pomodoro Technique! Work for 25 minutes, then take a 5-minute break. Your brain retains information better in focused sprints. Try it today and thank me later! 🍅 #StudyHacks #CampusLife",
+        "🧠 The biggest mistake students make? Passive reading. Instead, try active recall — close the book and write down everything you remember. You'll retain 3x more information. #StudySmart #ExamPrep",
+        "⚡ Your study environment matters more than you think. Clean desk + good lighting + no phone = 2x productivity. Give it a try today! #StudentLife #Productivity",
+      ],
+      motivation: [
+        "✨ Every expert was once a beginner. The gap between where you are and where you want to be is filled with consistent daily effort. You've got this! 💪 #Motivation #GrowthMindset",
+        "🚀 Don't compare your chapter 1 to someone else's chapter 20. Your journey is unique. Keep going, keep growing! #Progress #StudentLife",
+        "🌅 Today is another chance to get closer to your goals. Small consistent steps lead to massive results over time. Make today count! #Inspiration #CampusBridge",
+      ],
+      tech: [
+        "💡 Just explored a fascinating AI development! The intersection of NLP and education is creating personalized learning experiences that adapt in real-time. The future of academia is here! 🤖 #TechTrends #EdTech #AI",
+        "🔥 GitHub Copilot, ChatGPT, and now multimodal AI — the tools available to developers in 2025 are absolutely insane. What are you building? 💻 #AI #Development #Tech",
+        "⚡ Did you know? By 2030, 85 million jobs may be displaced by automation, but 97 million new roles will emerge. The key: adaptability and continuous learning. #FutureOfWork #Tech",
+      ],
+      achievement: [
+        "🎉 Proud moment alert! After weeks of hard work and countless late nights, I finally completed my project. Big thanks to everyone who supported me along the way! 🙏 #Achievement #Grateful #CampusLife",
+        "📈 Small win today — I understood a concept that had been confusing me for weeks! Sometimes all it takes is a different explanation. Progress is progress! 💪 #LearningJourney",
+        "🏆 Just got my results back and I'm thrilled with my progress! Hard work truly pays off. To everyone still grinding — keep going, your breakthrough is coming! ⭐ #Success #Motivation",
+      ],
+      'campus-life': [
+        "☕ There's something magical about studying in the campus library early morning — the quietness, the focus, the coffee. Who else loves early morning study sessions? 🌅 #CampusLife #StudentVibes",
+        "🤝 Made an amazing connection today on CampusBridge! Never underestimate the power of your campus network — your next opportunity might come from a hallway conversation. #Networking #CampusBridge",
+        "📱 Campus life is a unique experience that molds you in ways textbooks can't. Cherish every moment — the late-night study sessions, the project chaos, the friendships. #CampusLife #Memories",
+      ],
+      career: [
+        "💼 Career tip: your soft skills matter just as much as technical knowledge. Communication, empathy, and adaptability are what employers truly value in 2025. #CareerAdvice #ProfessionalGrowth",
+        "🎯 Internships, projects, and extracurriculars > just grades. Build your portfolio actively. Employers want to see what you've *done*, not just what you've *studied*. #CareerTips #Students",
+        "🌐 Networking is not about collecting contacts — it's about building genuine relationships. One authentic connection can open doors that a hundred cold applications can't. #Networking #Career",
+      ],
+    };
+
+    function selectTopic(el) {
+      document.querySelectorAll('.topic-pill').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      activeTopic = el.dataset.topic;
+    }
+
+    async function generatePost() {
+      const btn = document.getElementById('gen-btn');
+      const output = document.getElementById('post-gen-output');
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating...';
+      output.textContent = '';
+
+      try {
+        const topicLabels = {
+          'study-tips': 'university study tips and effective learning strategies',
+          motivation: 'motivational content for students',
+          tech: 'latest tech or AI trends for students',
+          achievement: 'celebrating a personal academic achievement',
+          'campus-life': 'fun and relatable campus life experiences',
+          career: 'career advice for students and fresh graduates',
+        };
+        const topic = topicLabels[activeTopic] || activeTopic;
+        const prompt = `Write a single engaging LinkedIn/social media post about "${topic}" for a college student community. Keep it under 60 words. Include relevant emojis and 2-3 hashtags. Be inspiring, relatable, and conversational. Return ONLY the post text, nothing else.`;
+        const post = await callGemini(prompt);
+
+        // Typewriter effect
+        for (let i = 0; i < post.length; i++) {
+          output.textContent += post[i];
+          if (i % 5 === 0) await new Promise(r => setTimeout(r, 12));
+        }
+      } catch (err) {
+        // Fallback to templates on API error
+        const templates = postTemplates[activeTopic] || postTemplates['study-tips'];
+        const post = templates[Math.floor(Math.random() * templates.length)];
+        for (let i = 0; i < post.length; i++) {
+          output.textContent += post[i];
+          if (i % 5 === 0) await new Promise(r => setTimeout(r, 15));
+        }
+      }
+
+      btn.disabled = false;
+      btn.textContent = '✨ Generate';
+    }
+
+    async function postToFeed() {
+      const text = document.getElementById('post-gen-output').textContent;
+      if (!text || text.includes('Click "Generate"')) {
+        alert('Please generate a post first!');
+        return;
+      }
+      try {
+        await apiFetch('/posts', {
+          method: 'POST',
+          body: JSON.stringify({ body: text })
+        });
+        alert('✅ Post shared to your feed!');
+      } catch {
+        alert('Failed to post. Please try again.');
+      }
+    }
+
+    /* ════════════════════════════════════════
+       AI Career Advisor
+    ════════════════════════════════════════ */
+    const careerAdvice = {
+      Student: {
+        CS: [
+          { text: "🏗️ Build 2-3 strong GitHub projects. Employers value demonstrable work over credentials.", color: '' },
+          { text: "🎓 Aim for internships in your 2nd or 3rd year. Apply early — deadlines are 6 months ahead.", color: 'green' },
+          { text: "📝 Prepare a crisp 1-page resume. Tailor it per role with relevant keywords.", color: 'cyan' },
+          { text: "🤝 Join ACM, Google DSC, or local hackathons. Your network is your net worth.", color: 'purple' },
+        ],
+        default: [
+          { text: "📚 Focus on building a strong foundation in your core subjects — employers notice depth.", color: '' },
+          { text: "🌐 Start networking now. Connect with seniors, alumni, and professors.", color: 'green' },
+          { text: "💼 Seek internships, volunteer roles, or part-time work in your domain.", color: 'cyan' },
+          { text: "🎯 Identify 3 target companies and reverse-engineer what skills they hire for.", color: 'purple' },
+        ],
+      },
+      Professor: {
+        default: [
+          { text: "📊 Publish your research on Google Scholar and ResearchGate for wider visibility.", color: '' },
+          { text: "🤝 Collaborate with industry through consulting, workshops, and guest lectures.", color: 'green' },
+          { text: "🧑‍🏫 Mentor students for competitions — it builds your reputation and their careers.", color: 'cyan' },
+          { text: "💡 Apply for institutional grants and fellowships to fund your research.", color: 'purple' },
+        ]
+      },
+      Alumni: {
+        default: [
+          { text: "💼 Give back by posting job openings on the alumni board — karma comes around.", color: '' },
+          { text: "🌟 Offer mentorship to current students. It sharpens your leadership skills too.", color: 'green' },
+          { text: "📣 Share industry insights publicly — it builds your personal brand.", color: 'cyan' },
+          { text: "🔗 Keep your CampusBridge profile updated for referrals and visibility.", color: 'purple' },
+        ]
+      }
+    };
+
+    function loadCareerTips() {
+      const user = getUser();
+      if (!user) return;
+      const role = user.role || 'Student';
+      const dept = user.department || 'default';
+      const advice = careerAdvice[role]?.[dept] || careerAdvice[role]?.['default'] || careerAdvice.Student.default;
+
+      const el = document.getElementById('career-tips');
+      el.innerHTML = `
+    <div style="font-size:0.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.25rem">
+      Tailored for you as a ${role}
+    </div>
+    ${advice.map(a => `<div class="career-tip ${a.color}">${a.text}</div>`).join('')}
+  `;
+    }
+
+    function refreshCareerTips() {
+      const el = document.getElementById('career-tips');
+      el.innerHTML = '<div style="color:var(--muted);font-size:0.83rem;text-align:center;padding:1rem">Refreshing insights...</div>';
+      setTimeout(loadCareerTips, 800);
+    }
+
+    /* ════════════════════════════════════════
+       AI Smart Search
+    ════════════════════════════════════════ */
+    let allUsers = [];
+    async function loadUsers() {
+      try {
+        const res = await apiFetch('/users');
+        allUsers = await res.json();
+      } catch { }
+    }
+
+    let searchTimer;
+    function smartSearch(query) {
+      clearTimeout(searchTimer);
+      if (!query.trim()) {
+        document.getElementById('ss-results').innerHTML = '<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:0.5rem">Try a natural language query above...</div>';
+        return;
+      }
+      searchTimer = setTimeout(() => doSmartSearch(query), 300);
+    }
+
+    function doSmartSearch(query) {
+      const q = query.toLowerCase();
+      const el = document.getElementById('ss-results');
+
+      // Parse intent from natural language
+      let filtered = allUsers;
+      if (q.includes('professor') || q.includes('teacher')) filtered = allUsers.filter(u => u.role === 'Professor');
+      else if (q.includes('student')) filtered = allUsers.filter(u => u.role === 'Student');
+      else if (q.includes('alumni') || q.includes('graduate')) filtered = allUsers.filter(u => u.role === 'Alumni');
+
+      // Filter by company/department keywords
+      const companies = ['google', 'microsoft', 'amazon', 'meta', 'apple', 'netflix', 'infosys', 'tcs', 'wipro'];
+      for (const company of companies) {
+        if (q.includes(company)) {
+          filtered = filtered.filter(u => u.company?.toLowerCase().includes(company) || u.bio?.toLowerCase().includes(company));
+        }
+      }
+
+      // Generic name/department filter
+      if (!['professor', 'teacher', 'student', 'alumni', 'graduate', ...companies].some(k => q.includes(k))) {
+        filtered = allUsers.filter(u =>
+          u.fullName.toLowerCase().includes(q) ||
+          u.department?.toLowerCase().includes(q) ||
+          u.company?.toLowerCase().includes(q) ||
+          u.skills?.some(s => s.toLowerCase().includes(q))
+        );
+      }
+
+      if (!filtered.length) {
+        el.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:0.5rem">No results found. Try a different query.</div>';
+        return;
+      }
+
+      el.innerHTML = filtered.slice(0, 6).map(u => `
+    <a href="profile.html?id=${u._id}" class="ss-result-item">
+      <img src="${avatarUrl(u.avatar)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0"/>
+      <div>
+        <div class="ss-result-title">${u.fullName}</div>
+        <div class="ss-result-sub">${u.role}${u.department ? ' · ' + u.department : ''}${u.company ? ' @ ' + u.company : ''}</div>
+      </div>
+    </a>
+  `).join('');
+    }
+
+    /* ════════════════════════════════════════
+       Smart Feed Ranking
+    ════════════════════════════════════════ */
+    async function loadRankedFeed() {
+      const el = document.getElementById('ranked-posts');
+      try {
+        const res = await apiFetch('/feed?page=1');
+        const posts = await res.json();
+        if (!posts.length) { el.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;text-align:center;padding:1rem">No posts yet.</div>'; return; }
+
+        // AI Scoring: weight likes heavily + comment activity + recency
+        const now = Date.now();
+        const scored = posts.map(p => {
+          const age = (now - new Date(p.createdAt).getTime()) / (1000 * 60 * 60); // hours
+          const recency = Math.max(0, 100 - age * 2);
+          const engagement = (p.likes?.length || 0) * 10 + (p.comments?.length || 0) * 5;
+          const score = Math.round(recency * 0.4 + engagement * 0.6);
+          return { ...p, _aiScore: Math.min(99, score) };
+        }).sort((a, b) => b._aiScore - a._aiScore);
+
+        el.innerHTML = scored.slice(0, 6).map(p => `
+      <div class="ranked-post" onclick="window.location.href='feed.html'">
+        <div class="ranked-score">${p._aiScore}</div>
+        <div class="ranked-content">
+          <div class="ranked-author">${p.author?.fullName || 'Unknown'}</div>
+          <div class="ranked-body">${p.body || '📷 Image post'}</div>
+          <div class="ranked-meta">❤️ ${p.likes?.length || 0} · 💬 ${p.comments?.length || 0}</div>
+        </div>
+      </div>
+    `).join('');
+      } catch {
+        el.innerHTML = '<div style="color:#f87171;font-size:0.8rem;padding:1rem">Failed to load feed.</div>';
+      }
+    }
+
+    /* ════════════════════════════════════════
+       AI Resume Analyzer
+    ════════════════════════════════════════ */
+    const resumeKeywords = {
+      technical: ['python', 'javascript', 'java', 'c++', 'sql', 'machine learning', 'ai', 'react', 'node', 'aws', 'docker', 'git', 'html', 'css', 'tensorflow', 'mongodb', 'typescript'],
+      soft: ['leadership', 'communication', 'teamwork', 'problem solving', 'analytical', 'management', 'collaboration', 'initiative', 'adaptable'],
+      action: ['developed', 'built', 'designed', 'led', 'managed', 'improved', 'implemented', 'created', 'achieved', 'reduced', 'increased', 'launched'],
+      sections: ['education', 'experience', 'skills', 'projects', 'achievements', 'certifications', 'summary', 'objective'],
+    };
+
+    async function analyzeResume() {
+      const text = document.getElementById('resume-text').value.trim();
+      if (!text) { alert('Please paste your resume text first!'); return; }
+
+      const result = document.getElementById('resume-result');
+      const btn = document.querySelector('button[onclick="analyzeResume()"]');
+      
+      btn.disabled = true;
+      btn.textContent = '⏳ Analyzing...';
+      result.innerHTML = '<div style="color:var(--muted);font-size:0.83rem;text-align:center;padding:1.5rem">AI is reading your resume...</div>';
+
+      try {
+        const prompt = `You are an expert tech recruiter. Analyze this resume text and provide a JSON response ONLY. No markdown, no conversational text.
+Format: {"score": 85, "foundKeywords": ["React", "Python", "Leadership"], "missingKeywords": ["AWS", "Testing"], "tips": ["Quantify your achievements.", "Add a skills section."]}
+Resume text: ${text}`;
+        
+        let raw = await callGemini(prompt);
+        if(raw.startsWith('```')) {
+            raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+        }
+        
+        const data = JSON.parse(raw);
+        const totalScore = data.score || 0;
+        const circumference = 2 * Math.PI * 38;
+        const dashOffset = circumference - (circumference * totalScore / 100);
+        const color = totalScore >= 70 ? '#22c55e' : totalScore >= 45 ? '#f59e0b' : '#f43f5e';
+
+        result.innerHTML = `
+    <div class="resume-score">
+      <div class="resume-score-ring">
+        <svg width="90" height="90" viewBox="0 0 90 90">
+          <circle cx="45" cy="45" r="38" fill="none" stroke="rgba(245,158,11,0.12)" stroke-width="8"/>
+          <circle cx="45" cy="45" r="38" fill="none" stroke="${color}" stroke-width="8"
+            stroke-dasharray="${circumference}" stroke-dashoffset="${dashOffset}" stroke-linecap="round"
+            style="transition:stroke-dashoffset 1s ease"/>
+        </svg>
+        <div class="score-num">${totalScore}</div>
+      </div>
+      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.75rem">Resume Score out of 100</div>
+    </div>
+    <div style="font-size:0.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:0.4rem">AI Keyword Analysis</div>
+    <div class="resume-tags">
+      ${(data.foundKeywords||[]).slice(0, 8).map(k => `<span class="resume-tag rt-found">✓ ${k}</span>`).join('')}
+      ${(data.missingKeywords||[]).slice(0, 4).map(k => `<span class="resume-tag rt-missing">✗ ${k}</span>`).join('')}
+    </div>
+    ${(data.tips && data.tips.length) ? ` 
+      <div style="font-size:0.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin:0.85rem 0 0.4rem">AI Recommendations</div>
+      <div style="display:flex;flex-direction:column;gap:0.4rem">
+        ${data.tips.map(t => `<div style="background:radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:0.5rem 0.75rem;font-size:0.78rem;color:var(--text)">${t}</div>`).join('')}
+      </div>
+    ` : '<div style="color:#34d399;font-size:0.83rem;margin-top:0.75rem">✅ Your resume is well-structured. Great job!</div>'}
+  `;
+      } catch (err) {
+        result.innerHTML = '<div style="color:#f87171;font-size:0.83rem;text-align:center;padding:1.5rem">Failed to analyze resume via AI: ' + err.message + '</div>';
+      }
+      
+      btn.disabled = false;
+      btn.textContent = '🔍 Analyze Resume';
+    }
+
+    /* ════════════════════════════════════════
+       Init
+    ════════════════════════════════════════ */
+    (async () => {
+      if (!requireAuth()) return;
+      loadCareerTips();
+      await loadUsers();
+      await loadRankedFeed();
+    })();
+  </script>
+</body>
+
+</html>
